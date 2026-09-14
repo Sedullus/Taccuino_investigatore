@@ -1,0 +1,58 @@
+.blocco {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.rigaTop {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.armaCard {
+  border-top: 1px solid var(--colore-bordo);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.armaTesta {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pallinoMunizione {
+  width: 9px;
+  height: 22px;
+  border-radius: 1px;
+  border: 1px solid var(--colore-bordo-forte);
+  box-sizing: border-box;
+}
+
+.nuovaArmaCard {
+  border: 1px solid var(--colore-bordo);
+  border-radius: var(--raggio);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.grigliaCampi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.ricordi {
+  border-top: 1px solid var(--colore-bordo);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

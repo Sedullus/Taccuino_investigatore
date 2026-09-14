@@ -1,0 +1,36 @@
+.blocco {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vuoto {
+  padding: 28px 0;
+  text-align: center;
+  font-family: var(--font-prosa);
+  font-size: 18px;
+  color: var(--colore-testo-debole);
+}
+
+.riga {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--colore-bordo);
+}
+
+.rigaAzioni {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.recupero {
+  border-top: 1px solid var(--colore-bordo);
+  padding-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

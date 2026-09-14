@@ -1,0 +1,26 @@
+.blocco {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rigaAnnulla {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.vuoto {
+  padding: 34px 0;
+  text-align: center;
+  font-family: var(--font-prosa);
+  font-size: 18px;
+  color: var(--colore-testo-debole);
+}
+
+.riga {
+  display: flex;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--colore-bordo);
+}

@@ -87,12 +87,13 @@ export function VistaAbilita() {
               disabled={a.nonSpuntabile}
               style={{
                 borderColor: a.nonSpuntabile ? 'var(--colore-bordo)' : a.spunta ? 'var(--colore-successo)' : 'var(--colore-bordo-forte)',
-                color: a.spunta ? 'var(--colore-successo-testo)' : 'transparent',
+                color: 'var(--colore-successo-testo)',
               }}
               onClick={() => toggleSpunta(a.id)}
               aria-label="Spunta esperienza"
+              aria-pressed={a.nonSpuntabile ? undefined : a.spunta}
             >
-              {a.nonSpuntabile ? '' : '✓'}
+              {!a.nonSpuntabile && a.spunta ? '✓' : ''}
             </button>
           </div>
         ))}

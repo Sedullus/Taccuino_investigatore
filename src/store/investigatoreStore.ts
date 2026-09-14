@@ -15,7 +15,10 @@ import {
 import { esportaJSON, importaJSON } from '../persistence/importExport';
 import { VERSIONE_SCHEMA_CORRENTE } from '../persistence/schema';
 import { puoForzareTiro, puoSpendereFortuna, valutaTiro } from '../rules/checks';
-import { combinaDadi, generatoreDefault, tiraD100Con } from '../rules/dice';
+import { contestoBDPerModalita, dadoPerColpiMultipli, eMalfunzionamento, risolviDannoEstremo, dannoNormale } from '../rules/combat';
+import { combinaDadi, generatoreDefault, metaBD, tiraD100Con } from '../rules/dice';
+import { bonusDannoEStruttura } from '../rules/derived';
+import { sviluppaAbilita as calcolaSviluppoAbilita, recuperoFortuna as calcolaRecuperoFortuna } from '../rules/development';
 import { applicaCura, applicaDanno } from '../rules/health';
 import { eFolliaIndefinita, richiedeTiroINT, risolviPerditaSanita, valutaTiroSanita } from '../rules/sanity';
 import {
@@ -24,7 +27,7 @@ import {
   NON_SPUNTABILI,
   nomeConSpecializzazione,
 } from '../rules/skills1920';
-import type { Abilita, Caratteristica, ChiaveOverrideNumerico, Investigatore } from '../rules/types';
+import type { Abilita, Arma, Caratteristica, ChiaveOverrideNumerico, Investigatore } from '../rules/types';
 import { creaAdeleMarchetti } from '../data/adeleMarchetti';
 import { nuovaVoceRegistro } from './registro';
 import { creaTiro, type TiroInCorso } from './tiro';
@@ -108,6 +111,15 @@ function voceElencoDi(i: Investigatore): VoceElenco {
   return { id: i.id, nome: i.anagrafica.nome, nota: [i.anagrafica.professione, i.anagrafica.residenza].filter(Boolean).join(' · ') };
 }
 
+export interface StatoCombattimento {
+  armaAttivaId: string | null;
+  armaPronta: boolean;
+  ravvicinata: boolean;
+  colpiScelti: number;
+  strAvversario: string;
+  ultimiDanni: Record<string, string>;
+}
+
 interface StatoStore {
   elenco: VoceElenco[];
   attivo: Investigatore | null;
@@ -116,6 +128,7 @@ interface StatoStore {
   caricato: boolean;
   erroreImportMessaggio: string | null;
   tiro: TiroInCorso | null;
+  combattimento: StatoCombattimento;
 
   init: () => Promise<void>;
   selezionaScheda: (id: string) => Promise<void>;
@@ -161,6 +174,23 @@ interface StatoStore {
   setUnitaDistanza: (u: 'metri' | 'piedi') => void;
 
   undo: () => void;
+
+  // ── Combattimento (§10, Fase 2) ────────────────────────────────────────
+  selezionaArma: (id: string) => void;
+  toggleArmaPronta: () => void;
+  toggleRavvicinata: () => void;
+  impostaColpiScelti: (n: number) => void;
+  impostaStrAvversario: (v: string) => void;
+  apriAttaccoArma: (armaId: string) => void;
+  tiraDannoArma: (armaId: string) => void;
+  tiraDannoEstremoArma: (armaId: string) => void;
+  ricaricaArma: (armaId: string) => void;
+  aggiungiArma: (arma: Omit<Arma, 'id' | 'inceppata' | 'munizioni'>) => void;
+  rimuoviArma: (id: string) => void;
+
+  // ── Fine scenario (§6, Fase 2) ──────────────────────────────────────────
+  eseguiSviluppoTutte: () => { nome: string; aumenta: boolean; nuovoValore: number; guadagnaSAN: boolean }[];
+  eseguiRecuperoFortuna: () => { guadagna: boolean; nuovaFortuna: number; tiro: number };
 }
 
 export const useInvestigatoreStore = create<StatoStore>((set, get) => {
@@ -185,18 +215,27 @@ export const useInvestigatoreStore = create<StatoStore>((set, get) => {
 
   function applicaConseguenzeTiro(riuscito: boolean, livello: string, forzato: boolean) {
     const s = get();
-    if (!s.tiro) return;
+    if (!s.tiro || !s.attivo) return;
     const dettaglio = `${s.tiro.nome} · ${s.tiro.esito?.roll ?? ''} su ${s.tiro.valore} · ${livello}${forzato ? ' · forzato' : ''}`;
     const skillId = s.tiro.tipo === 'abilita' && riuscito ? s.tiro.skillId : undefined;
     const conseguenza = s.tiro.conseguenza;
     const scattaConseguenza = conseguenza ? conseguenza.alSuccesso === riuscito : false;
+    // Malfunzionamento (§10.3): un tiro d'attacco pari o superiore al valore
+    // di malfunzionamento dell'arma la rende inceppata.
+    const roll = s.tiro.esito?.roll;
+    const arma = s.tiro.tipo === 'attacco' && s.tiro.armaId ? s.attivo.armi.find((a) => a.id === s.tiro!.armaId) : undefined;
+    const siInceppa = !!(arma && roll != null && eMalfunzionamento(roll, arma.malfunzionamento));
     mutaAttivo((b) => {
       if (skillId) {
         const a = b.abilita.find((x) => x.id === skillId);
         if (a && !a.nonSpuntabile) a.spunta = true;
       }
       if (conseguenza && scattaConseguenza) b.condizioni[conseguenza.condizione] = true;
-    }, 'Tiro', dettaglio + (conseguenza ? (scattaConseguenza ? ` · conseguenza: ${conseguenza.condizione}` : ' · nessuna conseguenza') : ''));
+      if (siInceppa && arma) {
+        const a = b.armi.find((x) => x.id === arma.id);
+        if (a) a.inceppata = true;
+      }
+    }, 'Tiro', dettaglio + (conseguenza ? (scattaConseguenza ? ` · conseguenza: ${conseguenza.condizione}` : ' · nessuna conseguenza') : '') + (siInceppa ? ` · ${arma!.nome} inceppata` : ''));
   }
 
   function applicaEsitoTiro(roll: number, dettagliDadi: { unita?: number; decine?: number[]; sceltaIndex?: number }) {
@@ -220,6 +259,7 @@ export const useInvestigatoreStore = create<StatoStore>((set, get) => {
     caricato: false,
     erroreImportMessaggio: null,
     tiro: null,
+    combattimento: { armaAttivaId: null, armaPronta: false, ravvicinata: false, colpiScelti: 1, strAvversario: '', ultimiDanni: {} },
 
     async init() {
       // React StrictMode invoca gli effetti due volte in sviluppo: senza
@@ -249,7 +289,13 @@ export const useInvestigatoreStore = create<StatoStore>((set, get) => {
       const investigatore = await caricaInvestigatore(id);
       if (!investigatore) return;
       await scriviIdAttivo(id);
-      set({ attivo: investigatore, undoStack: [], modalita: 'gioco', tiro: null });
+      set({
+        attivo: investigatore,
+        undoStack: [],
+        modalita: 'gioco',
+        tiro: null,
+        combattimento: { armaAttivaId: null, armaPronta: false, ravvicinata: false, colpiScelti: 1, strAvversario: '', ultimiDanni: {} },
+      });
     },
 
     async creaSchedaVuota() {
@@ -548,6 +594,146 @@ export const useInvestigatoreStore = create<StatoStore>((set, get) => {
       });
       set({ attivo: conRegistro, undoStack: resto });
       void salvaInvestigatore(conRegistro);
+    },
+
+    // ── Combattimento (§10) ────────────────────────────────────────────────
+    selezionaArma(id) {
+      const arma = get().attivo?.armi.find((a) => a.id === id);
+      set((st) => ({ combattimento: { ...st.combattimento, armaAttivaId: id } }));
+      if (arma) mutaAttivo(() => {}, 'Arma impugnata', arma.nome);
+    },
+
+    toggleArmaPronta() {
+      set((s) => ({ combattimento: { ...s.combattimento, armaPronta: !s.combattimento.armaPronta } }));
+    },
+
+    toggleRavvicinata() {
+      set((s) => ({ combattimento: { ...s.combattimento, ravvicinata: !s.combattimento.ravvicinata } }));
+    },
+
+    impostaColpiScelti(n) {
+      set((s) => ({ combattimento: { ...s.combattimento, colpiScelti: n } }));
+    },
+
+    impostaStrAvversario(v) {
+      set((s) => ({ combattimento: { ...s.combattimento, strAvversario: v } }));
+    },
+
+    apriAttaccoArma(armaId) {
+      const s = get();
+      if (!s.attivo) return;
+      const arma = s.attivo.armi.find((a) => a.id === armaId);
+      if (!arma) return;
+      if (arma.caricatore > 0 && arma.munizioni <= 0) return;
+      const abilitaArma = s.attivo.abilita.find((a) => a.nome === arma.abilitaCollegata);
+      const valore = abilitaArma?.valore ?? 0;
+      const dadi = Math.max(-2, Math.min(2, dadoPerColpiMultipli(s.combattimento.colpiScelti) + (s.combattimento.ravvicinata ? 1 : 0)));
+      if (arma.caricatore > 0) {
+        const munizioniPrima = arma.munizioni;
+        mutaAttivo((b) => {
+          const a = b.armi.find((x) => x.id === armaId);
+          if (a) a.munizioni = Math.max(0, a.munizioni - 1);
+        }, 'Munizioni', `${arma.nome} · munizioni ${munizioniPrima} → ${Math.max(0, munizioniPrima - 1)}`);
+      }
+      const base = creaTiro({ tipo: 'attacco', nome: `${arma.nome} — attacco`, valore, armaId, skillId: abilitaArma?.id });
+      set({ tiro: { ...base, dadiNetti: dadi } });
+    },
+
+    tiraDannoArma(armaId) {
+      const s = get();
+      if (!s.attivo) return;
+      const arma = s.attivo.armi.find((a) => a.id === armaId);
+      if (!arma) return;
+      const bdCalcolato = s.attivo.override.bd ?? bonusDannoEStruttura(s.attivo.caratteristiche.FOR, s.attivo.caratteristiche.TAG).bd;
+      const bdEffettivo = contestoBDPerModalita({ full: bdCalcolato, half: metaBD(bdCalcolato) }, arma.bdMode);
+      const risultato = dannoNormale(arma.danno, bdEffettivo, generatoreDefault);
+      set((st) => ({ combattimento: { ...st.combattimento, ultimiDanni: { ...st.combattimento.ultimiDanni, [armaId]: `Danno ${risultato.totale}  (${arma.danno} → ${risultato.dettaglio})` } } }));
+      mutaAttivo(() => {}, `Danno · ${arma.nome}`, `${arma.danno} → ${risultato.totale}`);
+    },
+
+    tiraDannoEstremoArma(armaId) {
+      const s = get();
+      if (!s.attivo) return;
+      const arma = s.attivo.armi.find((a) => a.id === armaId);
+      if (!arma) return;
+      const bdCalcolato = s.attivo.override.bd ?? bonusDannoEStruttura(s.attivo.caratteristiche.FOR, s.attivo.caratteristiche.TAG).bd;
+      const bdEffettivo = contestoBDPerModalita({ full: bdCalcolato, half: metaBD(bdCalcolato) }, arma.bdMode);
+      const risultato = risolviDannoEstremo(arma.danno, arma.tipo, bdEffettivo, generatoreDefault);
+      set((st) => ({ combattimento: { ...st.combattimento, ultimiDanni: { ...st.combattimento.ultimiDanni, [armaId]: `Danno estremo ${risultato.totale}  (${risultato.dettaglio})` } } }));
+      mutaAttivo(() => {}, `Danno estremo · ${arma.nome}`, risultato.dettaglio + ` → ${risultato.totale}`);
+    },
+
+    ricaricaArma(armaId) {
+      const s = get();
+      const arma = s.attivo?.armi.find((a) => a.id === armaId);
+      if (!arma) return;
+      mutaAttivo((b) => {
+        const a = b.armi.find((x) => x.id === armaId);
+        if (a) {
+          a.munizioni = a.caricatore;
+          a.inceppata = false;
+        }
+      }, 'Ricaricata', arma.nome);
+    },
+
+    aggiungiArma(arma) {
+      mutaAttivo((b) => {
+        b.armi.push({ ...arma, id: crypto.randomUUID(), munizioni: arma.caricatore, inceppata: false });
+      }, 'Arma aggiunta', arma.nome);
+    },
+
+    rimuoviArma(id) {
+      if (id === 'senza-armi') return;
+      mutaAttivo((b) => {
+        b.armi = b.armi.filter((a) => a.id !== id);
+      });
+      set((s) => (s.combattimento.armaAttivaId === id ? { combattimento: { ...s.combattimento, armaAttivaId: null } } : s));
+    },
+
+    // ── Fine scenario (§6) ───────────────────────────────────────────────
+    eseguiSviluppoTutte() {
+      const s = get();
+      if (!s.attivo) return [];
+      const risultati: { nome: string; aumenta: boolean; nuovoValore: number; guadagnaSAN: boolean }[] = [];
+      const aggiornamenti: { id: string; nuovoValore: number }[] = [];
+      let sanGuadagnataTotale = 0;
+      for (const a of s.attivo.abilita) {
+        if (!a.spunta) continue;
+        const tiroD100 = generatoreDefault(100);
+        const aumentoD10 = generatoreDefault(10);
+        const esito = calcolaSviluppoAbilita(a.valore, tiroD100, aumentoD10);
+        risultati.push({ nome: a.nome, aumenta: esito.aumenta, nuovoValore: esito.nuovoValore, guadagnaSAN: esito.guadagnaSAN });
+        if (esito.aumenta) aggiornamenti.push({ id: a.id, nuovoValore: esito.nuovoValore });
+        if (esito.guadagnaSAN) sanGuadagnataTotale += generatoreDefault(6) + generatoreDefault(6);
+      }
+      mutaAttivo((b) => {
+        for (const u of aggiornamenti) {
+          const ab = b.abilita.find((x) => x.id === u.id);
+          if (ab) ab.valore = u.nuovoValore;
+        }
+        for (const a of b.abilita) a.spunta = false;
+        if (sanGuadagnataTotale > 0) {
+          const miti = b.abilita.find((x) => x.radice === 'Miti di Cthulhu')?.valore ?? 0;
+          const sanMax = b.override.sanMax ?? 99 - miti;
+          b.risorse.san = Math.min(sanMax, b.risorse.san + sanGuadagnataTotale);
+        }
+      }, 'Fase di sviluppo', `${risultati.length} abilità spuntate · ${aggiornamenti.length} aumentate${sanGuadagnataTotale > 0 ? ` · +${sanGuadagnataTotale} SAN` : ''}`);
+      return risultati;
+    },
+
+    eseguiRecuperoFortuna() {
+      const s = get();
+      if (!s.attivo) return { guadagna: false, nuovaFortuna: 0, tiro: 0 };
+      const fortunaPrima = s.attivo.risorse.fortuna;
+      const tiro = generatoreDefault(100);
+      const guadagnoD10 = generatoreDefault(10);
+      const esito = calcolaRecuperoFortuna(fortunaPrima, tiro, guadagnoD10);
+      if (esito.guadagna) {
+        mutaAttivo((b) => {
+          b.risorse.fortuna = esito.nuovaFortuna;
+        }, 'Recupero Fortuna', `tiro ${tiro} supera ${fortunaPrima} · +${esito.nuovaFortuna - fortunaPrima} → Fortuna ${esito.nuovaFortuna}`);
+      }
+      return { ...esito, tiro };
     },
   };
 });

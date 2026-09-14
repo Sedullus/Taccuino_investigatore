@@ -2,31 +2,42 @@ import { useEffect, useState } from 'react';
 import { useInvestigatoreStore } from './store/investigatoreStore';
 import { VistaStato } from './components/stato/VistaStato';
 import { VistaAbilita } from './components/abilita/VistaAbilita';
+import { VistaCombattimento } from './components/combattimento/VistaCombattimento';
+import { VistaRegistro } from './components/registro/VistaRegistro';
+import { VistaSviluppo } from './components/sviluppo/VistaSviluppo';
 import { VistaInvestigatori } from './components/investigatori/VistaInvestigatori';
 import { PannelloTiro } from './components/tiro/PannelloTiro';
 import { ApplicaDannoDialogo } from './components/dialoghi/ApplicaDannoDialogo';
 import { TiroSanitaDialogo } from './components/dialoghi/TiroSanitaDialogo';
 import { ImpostazioniDialogo } from './components/dialoghi/ImpostazioniDialogo';
 import { StatiDialogo } from './components/dialoghi/StatiDialogo';
+import { useWakeLock } from './hooks/useWakeLock';
 import comuni from './theme/comuni.module.css';
 import styles from './components/layout/Shell.module.css';
 
 type Vista = 'scheda' | 'investigatori';
-type TabMobile = 'stato' | 'abilita';
+type TabMobile = 'stato' | 'main';
+type TabContenuto = 'abilita' | 'combattimento' | 'registro' | 'sviluppo';
 type Dialogo = 'danno' | 'sanita' | 'impostazioni' | 'stati' | null;
+
+const TAB_CONTENUTO: { valore: TabContenuto; nome: string }[] = [
+  { valore: 'abilita', nome: 'Abilità' },
+  { valore: 'combattimento', nome: 'Combattimento' },
+  { valore: 'registro', nome: 'Registro' },
+  { valore: 'sviluppo', nome: 'Fine scenario' },
+];
 
 export function App() {
   const caricato = useInvestigatoreStore((s) => s.caricato);
   const attivo = useInvestigatoreStore((s) => s.attivo);
   const modalita = useInvestigatoreStore((s) => s.modalita);
   const setModalita = useInvestigatoreStore((s) => s.setModalita);
-  const undo = useInvestigatoreStore((s) => s.undo);
-  const undoStackLength = useInvestigatoreStore((s) => s.undoStack.length);
   const init = useInvestigatoreStore((s) => s.init);
   const apriTiro = useInvestigatoreStore((s) => s.apriTiro);
 
   const [vista, setVista] = useState<Vista>('scheda');
   const [tabMobile, setTabMobile] = useState<TabMobile>('stato');
+  const [tab, setTab] = useState<TabContenuto>('abilita');
   const [dialogo, setDialogo] = useState<Dialogo>(null);
 
   useEffect(() => {
@@ -34,9 +45,7 @@ export function App() {
   }, [init]);
 
   if (!caricato) {
-    return (
-      <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', color: 'var(--colore-testo-attenuato)' }}>Carico il taccuino…</div>
-    );
+    return <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', color: 'var(--colore-testo-attenuato)' }}>Carico il taccuino…</div>;
   }
 
   if (vista === 'investigatori' || !attivo) {
@@ -68,7 +77,17 @@ export function App() {
           <VistaStato onApriDanno={() => setDialogo('danno')} onApriSanita={() => setDialogo('sanita')} />
         </aside>
         <main className={styles.main}>
-          <VistaAbilita />
+          <div className={styles.rigaTab}>
+            {TAB_CONTENUTO.map((t) => (
+              <button key={t.valore} type="button" className={tab === t.valore ? styles.tabAttiva : styles.tab} onClick={() => setTab(t.valore)}>
+                {t.nome}
+              </button>
+            ))}
+          </div>
+          {tab === 'abilita' && <VistaAbilita />}
+          {tab === 'combattimento' && <VistaCombattimento />}
+          {tab === 'registro' && <VistaRegistro />}
+          {tab === 'sviluppo' && <VistaSviluppo />}
         </main>
       </div>
 
@@ -76,8 +95,35 @@ export function App() {
         <button type="button" className={tabMobile === 'stato' ? styles.voceBarraAttiva : styles.vociBarra} onClick={() => setTabMobile('stato')}>
           Stato
         </button>
-        <button type="button" className={tabMobile === 'abilita' ? styles.voceBarraAttiva : styles.vociBarra} onClick={() => setTabMobile('abilita')}>
+        <button
+          type="button"
+          className={tabMobile === 'main' && tab === 'abilita' ? styles.voceBarraAttiva : styles.vociBarra}
+          onClick={() => {
+            setTabMobile('main');
+            setTab('abilita');
+          }}
+        >
           Abilità
+        </button>
+        <button
+          type="button"
+          className={tabMobile === 'main' && tab === 'combattimento' ? styles.voceBarraAttiva : styles.vociBarra}
+          onClick={() => {
+            setTabMobile('main');
+            setTab('combattimento');
+          }}
+        >
+          Armi
+        </button>
+        <button
+          type="button"
+          className={tabMobile === 'main' && tab === 'registro' ? styles.voceBarraAttiva : styles.vociBarra}
+          onClick={() => {
+            setTabMobile('main');
+            setTab('registro');
+          }}
+        >
+          Registro
         </button>
         <button type="button" className={styles.vociBarra} onClick={() => setVista('investigatori')}>
           Schede
@@ -106,17 +152,6 @@ export function App() {
       )}
       {dialogo === 'impostazioni' && <ImpostazioniDialogo onChiudi={() => setDialogo(null)} />}
       {dialogo === 'stati' && <StatiDialogo onChiudi={() => setDialogo(null)} />}
-
-      {undoStackLength > 0 && (
-        <button
-          type="button"
-          className={comuni.bottoneTesto}
-          style={{ position: 'fixed', right: 16, bottom: 72, background: 'var(--colore-superficie-alta)', border: '1px solid var(--colore-bordo-forte)', padding: '8px 12px', zIndex: 7 }}
-          onClick={undo}
-        >
-          Annulla ultima azione
-        </button>
-      )}
     </div>
   );
 }
@@ -132,6 +167,8 @@ interface TestataProps {
 }
 
 function Testata({ vista, setVista, modalita, setModalita, onApriImpostazioni, onApriStati, mostraAzioniScheda }: TestataProps) {
+  const { supportato, attivo: wakeLockAttivo, toggle: toggleWakeLock } = useWakeLock();
+
   return (
     <div className={styles.intestazione}>
       <span className={styles.titolo}>Taccuino dell'Investigatore</span>
@@ -144,6 +181,11 @@ function Testata({ vista, setVista, modalita, setModalita, onApriImpostazioni, o
             {onApriStati && (
               <button type="button" className={comuni.bottone} onClick={onApriStati}>
                 Stati
+              </button>
+            )}
+            {supportato && (
+              <button type="button" className={comuni.bottone} onClick={toggleWakeLock} title="Impedisce allo schermo di spegnersi durante la sessione">
+                {wakeLockAttivo ? 'Schermo sempre acceso ✓' : 'Tieni lo schermo acceso'}
               </button>
             )}
           </>

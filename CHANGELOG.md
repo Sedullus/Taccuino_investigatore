@@ -29,4 +29,22 @@ Tutte le modifiche rilevanti del progetto, organizzate per fase di sviluppo.
 - Il tiro Sanità calcolava la soglia di Follia Indefinita solo per mostrarla, senza attivare davvero la condizione.
 
 ### Note
-- Fasi 2 e 3 (Combattimento, dadi fisici completi, registro di sessione dedicato, fase di sviluppo, PWA/offline/Wake Lock, Trascorsi/Equipaggiamento/Denaro/Compagni/Note, ritratto, stampa) non ancora iniziate.
+- Fase 3 (Trascorsi, Equipaggiamento, Denaro, Compagni, Note e indizi, ritratto, temi/impostazioni aggiuntive, vista di stampa) non ancora iniziata.
+
+## Fase 2 — Al tavolo
+
+### Aggiunto
+- Vista **Combattimento**: iniziativa da DES con interruttore "Arma da fuoco pronta" (+50), gittata ravvicinata calcolata da DES/5 (mostrata in metri o piedi secondo le impostazioni), colpi per round con dado penalità automatico su 2-3 colpi, schede armi con indicatori munizioni consumabili, Attacca/Tira danno/Danno estremo, malfunzionamento automatico (arma inceppata quando il tiro raggiunge la soglia), ricarica, aggiunta/rimozione armi, promemoria di mischia e calcolo manovra contro la Struttura dell'avversario.
+- **Modalità dadi fisici** nel pannello di tiro: inserimento di unità e fino a tre decine, oppure del risultato finale direttamente.
+- Vista **Registro** dedicata, con "Annulla ultima azione" e il conteggio dei passi disponibili nella pila di annullamento.
+- Vista **Fine scenario**: tira 1D100 per ogni abilità spuntata (aumento di 1D10 se il tiro supera il valore o 95), rimuove sempre le spunte, assegna +2D6 SAN per ogni abilità che supera la soglia 90, e recupero di Fortuna di fine sessione opzionale.
+- **PWA offline installabile**: `vite-plugin-pwa` con service worker (precache di tutto il bundle, nessuna chiamata di rete a runtime), manifest con icone 192/512/maskable generate localmente (nessuna dipendenza di disegno: un piccolo encoder PNG scritto a mano in `scripts/generate-icons.mjs`), meta tag per l'installazione su iOS/Android.
+- **Screen Wake Lock API** con interruttore "Tieni lo schermo acceso" in testata (solo in Modalità scheda), degradazione silenziosa se il browser non la supporta, ri-acquisizione automatica al ritorno di visibilità della pagina.
+
+### Corretto durante il collaudo manuale
+- La spunta esperienza delle abilità era sempre presente nel testo del pulsante (nascosta solo via colore trasparente): un lettore di schermo o un'estrazione testuale la vedeva su ogni abilità, anche quelle non spuntate. Ora il segno di spunta non viene proprio renderizzato quando l'abilità non è spuntata.
+
+### Verificato manualmente nel browser
+- Tiro d'attacco con arma da fuoco: apertura del pannello, munizioni scalate, esito e registro corretti.
+- Fase di sviluppo: nessun aumento quando il tiro non supera né il valore né 95; spunta rimossa comunque.
+- Build di produzione (`npm run build`) genera correttamente `sw.js`, `manifest.webmanifest` e precache; verificata con `npm run preview`. La registrazione effettiva del Service Worker non è verificabile nel pannello del browser automatizzato di sviluppo (blocca l'API `serviceWorker.register`), ma il file, il tipo MIME e il manifest sono corretti — da confermare in un browser reale (istruzioni nel README).
