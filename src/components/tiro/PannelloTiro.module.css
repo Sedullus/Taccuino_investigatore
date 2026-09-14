@@ -1,0 +1,118 @@
+.pannello {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  max-height: 78vh;
+  background: var(--colore-superficie-alta);
+  border-top: 1px solid var(--colore-bordo-forte);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 16px 24px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+@media (min-width: 600px) {
+  .pannello {
+    left: auto;
+    top: 57px;
+    bottom: 0;
+    width: 380px;
+    max-height: none;
+    border-top: 0;
+    border-left: 1px solid var(--colore-bordo-forte);
+    padding: 18px;
+  }
+}
+
+.testata {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 12px;
+}
+
+.riepilogo {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.nome {
+  font-size: 20px;
+  color: var(--colore-testo);
+}
+
+.valoreBase {
+  font-size: 22px;
+  color: var(--colore-testo);
+}
+
+.controlli {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.riga {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.blocFisico {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-left: 2px solid var(--colore-bordo-forte);
+  padding-left: 12px;
+}
+
+.esito {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rigaEsito {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.valoreFinale {
+  font-size: 52px;
+  font-weight: 300;
+  line-height: 0.9;
+  color: var(--colore-testo);
+}
+
+.dettaglioEsito {
+  font-size: 13px;
+  color: var(--colore-testo-attenuato);
+}
+
+.promemoria {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--colore-pericolo-testo);
+  border-left: 2px solid var(--colore-pericolo);
+  padding-left: 10px;
+}
+
+.azioni {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}

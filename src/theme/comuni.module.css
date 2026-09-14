@@ -1,0 +1,104 @@
+.bottone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 9px 14px;
+  font-size: 15px;
+  color: var(--colore-testo-attenuato);
+  background: transparent;
+  border: 1px solid var(--colore-bordo-forte);
+  border-radius: var(--raggio);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.bottone:hover {
+  color: var(--colore-testo);
+}
+
+.bottone:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bottonePrimario {
+  composes: bottone;
+  color: var(--colore-testo);
+  border-color: var(--colore-accento);
+}
+
+.bottoneTesto {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 9px 0;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--colore-testo-attenuato);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.bottoneTesto:hover {
+  color: var(--colore-testo);
+}
+
+.bottoneTestoAttivo {
+  composes: bottoneTesto;
+  color: var(--colore-testo);
+  border-bottom-color: var(--colore-accento);
+}
+
+.bottoneTestoPericolo {
+  composes: bottoneTesto;
+  color: var(--colore-pericolo-testo);
+  border-bottom-color: var(--colore-pericolo);
+}
+
+.bottoneTestoSuccesso {
+  composes: bottoneTesto;
+  color: var(--colore-successo-testo);
+  border-bottom-color: var(--colore-successo);
+}
+
+.input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  background: var(--colore-sfondo);
+  border: 1px solid var(--colore-bordo-forte);
+  border-radius: var(--raggio);
+  color: var(--colore-testo);
+  box-sizing: border-box;
+}
+
+.inputSovrascritto {
+  composes: input;
+  border-color: var(--colore-accento);
+}
+
+.etichetta {
+  font-family: var(--font-cifre);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--colore-testo-attenuato);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: var(--raggio);
+  border: 1px solid currentColor;
+}
+
+.card {
+  border-radius: var(--raggio);
+  padding: 14px;
+  background: var(--colore-superficie-alta);
+  border: 1px solid var(--colore-bordo);
+}

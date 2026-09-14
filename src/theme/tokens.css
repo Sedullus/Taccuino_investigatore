@@ -1,0 +1,131 @@
+/* Token del tema, ispirati al prototipo Claude Design: schedari e ufficio di
+   redazione anni '20, non "horror" da manuale. Tema scuro di default, tema
+   chiaro derivato per lo stesso impianto (§ "Direzione visiva"). */
+
+:root {
+  --colore-sfondo: #f4f1ea;
+  --colore-superficie: #ffffff;
+  --colore-superficie-alta: #ece6d8;
+  --colore-bordo: #d8d0bd;
+  --colore-bordo-forte: #b9ae91;
+  --colore-testo: #2a241c;
+  --colore-testo-attenuato: #6b6252;
+  --colore-testo-debole: #8a8170;
+
+  --colore-accento: #96702c;
+  --colore-accento-testo: #6b4f1f;
+  --colore-successo: #4f7a63;
+  --colore-successo-testo: #3a5c4a;
+  --colore-pericolo: #a3402f;
+  --colore-pericolo-testo: #8a3527;
+
+  --font-ui: 'Archivo Narrow', system-ui, sans-serif;
+  --font-cifre: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-prosa: 'Source Serif 4', Georgia, serif;
+
+  --raggio: 3px;
+  --durata-animazione: 180ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema='chiaro']) {
+    --colore-sfondo: #15181b;
+    --colore-superficie: #1a1e22;
+    --colore-superficie-alta: #1e2429;
+    --colore-bordo: #2c3238;
+    --colore-bordo-forte: #3a4148;
+    --colore-testo: #ece7dc;
+    --colore-testo-attenuato: #99a1a8;
+    --colore-testo-debole: #8d9299;
+
+    --colore-accento: #c8a465;
+    --colore-accento-testo: #c8a465;
+    --colore-successo: #7f9b8e;
+    --colore-successo-testo: #9fbdaf;
+    --colore-pericolo: #b3453c;
+    --colore-pericolo-testo: #e08076;
+  }
+}
+
+:root[data-tema='scuro'] {
+  --colore-sfondo: #15181b;
+  --colore-superficie: #1a1e22;
+  --colore-superficie-alta: #1e2429;
+  --colore-bordo: #2c3238;
+  --colore-bordo-forte: #3a4148;
+  --colore-testo: #ece7dc;
+  --colore-testo-attenuato: #99a1a8;
+  --colore-testo-debole: #8d9299;
+
+  --colore-accento: #c8a465;
+  --colore-accento-testo: #c8a465;
+  --colore-successo: #7f9b8e;
+  --colore-successo-testo: #9fbdaf;
+  --colore-pericolo: #b3453c;
+  --colore-pericolo-testo: #e08076;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--colore-sfondo);
+  color: var(--colore-testo);
+  font-family: var(--font-ui);
+  font-weight: 400;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+textarea,
+button,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+[role='button']:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--colore-accento);
+  outline-offset: 2px;
+}
+
+.cifre {
+  font-family: var(--font-cifre);
+  font-feature-settings: 'tnum';
+}
+
+@keyframes esposizione {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animato {
+  animation: esposizione var(--durata-animazione) ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

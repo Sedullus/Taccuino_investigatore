@@ -62,7 +62,19 @@ export interface Condizioni {
   folliaPermanente: boolean;
 }
 
-export type ChiaveOverride = 'pfMax' | 'pmMax' | 'sanMax' | 'mov' | 'bd' | 'struttura' | 'schivare';
+/** Chiavi dei valori derivati sovrascrivibili con un valore numerico (§3). */
+export type ChiaveOverrideNumerico = 'pfMax' | 'pmMax' | 'sanMax' | 'mov' | 'struttura' | 'schivare';
+
+export interface OverrideDerivati {
+  pfMax?: number;
+  pmMax?: number;
+  sanMax?: number;
+  mov?: number;
+  struttura?: number;
+  schivare?: number;
+  /** Il BD è un'espressione di dado (es. "1D4"), non un numero puro. */
+  bd?: string;
+}
 
 export interface VoceRegistro {
   id: string;
@@ -129,7 +141,7 @@ export interface Investigatore {
   versioneSchema: number;
   anagrafica: Anagrafica;
   caratteristiche: Record<Caratteristica, number>;
-  override: Partial<Record<ChiaveOverride, number>>;
+  override: OverrideDerivati;
   risorse: Risorse;
   condizioni: Condizioni;
   abilita: Abilita[];

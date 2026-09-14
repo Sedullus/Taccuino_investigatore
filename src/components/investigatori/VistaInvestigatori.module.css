@@ -1,0 +1,87 @@
+.blocco {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.vuotoBlocco {
+  padding: 44px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+  max-width: 52ch;
+}
+
+.vuotoTitolo {
+  font-family: var(--font-prosa);
+  font-size: 24px;
+  line-height: 1.35;
+  color: var(--colore-testo);
+}
+
+.vuotoTesto {
+  font-family: var(--font-prosa);
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--colore-testo-attenuato);
+}
+
+.riga {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0 14px 12px;
+  border-bottom: 1px solid var(--colore-bordo);
+  border-left: 3px solid transparent;
+  min-height: 44px;
+}
+
+.iniziali {
+  width: 44px;
+  height: 52px;
+  flex: none;
+  background: var(--colore-superficie);
+  border: 1px solid var(--colore-bordo-forte);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-cifre);
+  font-size: 14px;
+  color: var(--colore-testo-attenuato);
+}
+
+.apri {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+
+.nome {
+  font-size: 18px;
+}
+
+.nota {
+  font-size: 13px;
+  color: var(--colore-testo-attenuato);
+}
+
+.azioniRiga {
+  display: flex;
+  gap: 14px;
+  flex: none;
+}
+
+.azioniPrincipali {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+}

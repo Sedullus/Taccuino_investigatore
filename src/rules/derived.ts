@@ -1,7 +1,7 @@
 // Valori derivati: Metà/Quinto, PF/PM/SAN massimi, BD e Struttura, MOV,
 // Schivare, Lingua Madre, Valore di Credito (§2, §3, §4.3).
 
-import type { ChiaveOverride, Caratteristica } from './types';
+import type { ChiaveOverrideNumerico, Caratteristica, OverrideDerivati } from './types';
 
 export function meta(valore: number): number {
   return Math.floor(valore / 2);
@@ -71,13 +71,14 @@ export function movimento(DES: number, FOR: number, TAG: number, eta: number): n
 }
 
 /** Applica un override manuale se presente, altrimenti ritorna il valore calcolato. */
-export function applicaOverride(
-  chiave: ChiaveOverride,
-  override: Partial<Record<ChiaveOverride, number>>,
-  calcolato: number,
-): number {
+export function applicaOverride(chiave: ChiaveOverrideNumerico, override: OverrideDerivati, calcolato: number): number {
   const v = override[chiave];
   return v != null ? v : calcolato;
+}
+
+/** Come applicaOverride, ma per il BD (espressione di dado, non un numero). */
+export function applicaOverrideBD(override: OverrideDerivati, calcolato: string): string {
+  return override.bd ?? calcolato;
 }
 
 export interface ValoriDerivati {

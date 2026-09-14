@@ -1,0 +1,96 @@
+.blocco {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.barraRicerca {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.riga {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--colore-bordo);
+  min-height: 44px;
+}
+
+.stella {
+  font-size: 15px;
+  width: 22px;
+  text-align: center;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.nomeAbilita {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+
+.nome {
+  font-size: 16px;
+  color: var(--colore-testo);
+}
+
+.nota {
+  font-size: 11px;
+  color: var(--colore-testo-attenuato);
+}
+
+.valoreTiro {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--colore-testo);
+}
+
+.metaQuinto {
+  font-size: 13px;
+  color: var(--colore-testo-debole);
+  min-width: 52px;
+  text-align: right;
+}
+
+.spuntaBox {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--colore-bordo-forte);
+  border-radius: var(--raggio);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  background: none;
+  flex: none;
+}
+
+.spuntaBox:disabled {
+  cursor: default;
+}
+
+.vuoto {
+  padding: 28px 0;
+  text-align: center;
+  font-family: var(--font-prosa);
+  font-size: 18px;
+  color: var(--colore-testo-debole);
+}

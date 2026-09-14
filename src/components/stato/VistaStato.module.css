@@ -1,0 +1,110 @@
+.blocco {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.intestazione {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ritratto {
+  width: 64px;
+  height: 64px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--colore-superficie-alta);
+  border: 1px solid var(--colore-bordo-forte);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-prosa);
+  font-size: 24px;
+  color: var(--colore-testo-attenuato);
+}
+
+.datiAnagrafici {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nome {
+  font-size: 19px;
+  color: var(--colore-testo);
+  line-height: 1.2;
+}
+
+.sottotitolo {
+  font-size: 13px;
+  color: var(--colore-testo-attenuato);
+}
+
+.azioniRisorse {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.folliaTracker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rigaFollia {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-family: var(--font-cifre);
+  font-size: 11px;
+  color: var(--colore-testo-attenuato);
+}
+
+.condizioni {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.griglia {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px 8px;
+  border-top: 1px solid var(--colore-bordo);
+  padding-top: 14px;
+}
+
+.cella {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.valoreCarat {
+  font-size: 27px;
+  font-weight: 300;
+  color: var(--colore-testo);
+  cursor: pointer;
+  line-height: 1.05;
+}
+
+.derivatiRiga {
+  display: flex;
+  gap: 8px 18px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--colore-bordo);
+  padding-top: 12px;
+}
+
+.derivatoVoce {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+}
