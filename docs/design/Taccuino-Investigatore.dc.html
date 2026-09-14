@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/classical-3510d18d-b3a1-4be1-bd5a-7c996a87725b/styles.css">
+<script src="_ds/classical-3510d18d-b3a1-4be1-bd5a-7c996a87725b/_ds_bundle.js"></script>
+<script src="./image-slot.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;600&family=IBM+Plex+Mono:wght@300;400;500;600&family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #15181b; color: #d9d4c8; }
+  a { color: #c8a465; text-decoration: none; }
+  a:hover { color: #dbbd87; }
+  * { -webkit-tap-highlight-color: transparent; }
+  input, textarea, button { font: inherit; color: inherit; }
+  input:focus-visible, textarea:focus-visible, [role="button"]:focus-visible, button:focus-visible {
+    outline: 2px solid #c8a465; outline-offset: 2px;
+  }
+  ::selection { background: rgba(200,164,101,0.32); }
+  * { scrollbar-width: thin; scrollbar-color: #3a4148 transparent; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #3a4148; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #4a525a; }
+  ::-webkit-scrollbar-corner { background: transparent; }
+  @keyframes esposizione { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes lampo { 0% { background-color: rgba(200,164,101,0.22); } 100% { background-color: transparent; } }
+  /* Il layout a colonne è deciso dal CSS, non da una misura JS. */
+  [data-shell] { display: grid; grid-template-columns: 340px minmax(0,1fr); align-items: start; }
+  [data-aside] { display: flex; flex-direction: column; gap: 18px; padding: 18px; border-right: 1px solid #2c3238;
+    position: sticky; top: 57px; max-height: calc(100vh - 57px); overflow-y: auto; box-sizing: border-box; }
+  [data-main] { display: flex; flex-direction: column; gap: 18px; min-width: 0; padding: 18px clamp(18px,3vw,34px) 48px; }
+  [data-pannello] { position: fixed; right: 0; top: 57px; bottom: 0; width: 380px; overflow-y: auto; z-index: 10;
+    border-left: 1px solid #3a4148; padding: 18px; display: flex; flex-direction: column; gap: 16px; box-sizing: border-box;
+    background: radial-gradient(ellipse at 50% 18%, #1e2429, #1a1e22 78%); animation: esposizione 180ms ease-out; }
+  [data-barra] { display: none; }
+  /* Il kicker è solo etichetta: sotto i 700px lascia il posto ai comandi. */
+  @media (max-width: 700px) { [data-kicker] { display: none; } }
+  @media (max-width: 420px) { [data-testa] { gap: 8px 10px; } }
+  /* Ritratto: solo l'icona nel cerchio, il clic apre il selettore file. */
+  #ritratto-investigatore { cursor: pointer; }
+  @media (min-width: 1180px) {
+    [data-shell][data-panel="1"] { grid-template-columns: 340px minmax(360px,1fr) 400px; }
+    [data-shell][data-panel="1"] [data-pannello] { position: sticky; right: auto; bottom: auto; width: auto;
+      max-height: calc(100vh - 57px); z-index: 1; }
+  }
+  @media (max-width: 599px) {
+    [data-shell] { display: block; padding: 14px 14px 84px; }
+    [data-aside] { display: none; padding: 0 0 16px; border-right: 0; position: static; max-height: none; overflow: visible; }
+    [data-shell][data-tab="stato"] [data-aside] { display: flex; }
+    [data-main] { padding: 0; }
+    [data-shell][data-tab="stato"] [data-main] { display: none; }
+    [data-barra] { display: flex; }
+    [data-pannello] { position: fixed; left: 0; right: 0; top: auto; bottom: 0; width: auto; max-height: 76vh;
+      border-left: 0; border-top: 1px solid #3a4148; background: #1e2429; padding: 16px 16px 24px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</helmet>
+<div ref="{{ rootRef }}" style="background:#15181b; color:#d9d4c8; font-family:'Archivo Narrow', system-ui, sans-serif; font-weight:300; min-height:100vh; box-sizing:border-box;">
+
+  <div data-testa style="display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap; padding:10px clamp(12px,2vw,20px); border-bottom:1px solid #2c3238; position:sticky; top:0; background:#15181b; z-index:5;">
+    <span style="font-family:'Source Serif 4', Georgia, serif; font-weight:400; font-size:17px; color:#e4dfd4; min-width:0; flex:1 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Taccuino dell'Investigatore</span>
+    <span data-kicker style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#939ba2;">{{ modeKicker }}</span>
+    <div style="margin-left:auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+      <div role="button" tabindex="0" onClick="{{ toggleMode }}" style="{{ modeBtnStyle }}">{{ modeBtnLabel }}</div>
+      <div role="button" tabindex="0" onClick="{{ openStati }}" style="border:1px solid #3a4148; border-radius:2px; padding:8px 12px; font-size:14px; color:#a8b0b6; cursor:pointer; min-height:36px; display:flex; align-items:center;">Stati</div>
+      <div role="button" tabindex="0" onClick="{{ openImpostazioni }}" style="border:1px solid #3a4148; border-radius:2px; padding:8px 12px; font-size:14px; color:#a8b0b6; cursor:pointer; min-height:36px; display:flex; align-items:center; white-space:nowrap;">Impostazioni</div>
+      <div role="button" tabindex="0" onClick="{{ vaiInvestigatori }}" style="border:1px solid {{ invBordo }}; border-radius:2px; padding:8px 12px; font-size:14px; color: {{ invColore }}; cursor:pointer; min-height:36px; display:flex; align-items:center; white-space:nowrap;">Investigatori</div>
+    </div>
+  </div>
+
+  <div data-shell data-tab="{{ tab }}" data-panel="{{ panelFlag }}">
+
+    <aside data-aside>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <image-slot id="ritratto-investigatore" compact shape="circle" fit="cover" placeholder=" " style="width:88px; height:88px; flex:none;"></image-slot>
+        <div style="display:flex; flex-direction:column; gap:3px; min-width:0; flex:1;">
+          <sc-if value="{{ isGioco }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <div style="font-size:20px; color:#ece7dc; line-height:1.15;">{{ nome }}</div>
+              <div style="font-size:13px; color:#99a1a8;">{{ sottotitolo }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isModifica }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <sc-for list="{{ campiAnag }}" as="c" hint-placeholder-count="4">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.08em; color:#99a1a8; width:82px; flex:none;">{{ c.k }}</span>
+                  <input value="{{ c.v }}" onChange="{{ c.onCambia }}" style="flex:1; min-width:0; background:#15181b; border:1px solid #3a4148; border-radius:2px; padding:9px; font-size:15px; color:#ece7dc; min-height:40px; box-sizing:border-box;">
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+
+      <div style="border-radius:3px; padding:14px; background:#1e2429; border:1px solid #2c3238; display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr)); gap:16px;">
+        <div style="display:flex; flex-direction:column; gap:6px; min-width:0;">
+          <div style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">PF</div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div role="button" tabindex="0" onClick="{{ pfMeno }}" style="width:44px; height:44px; border:1px solid #3a4148; border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:19px; color:#a8b0b6; cursor:pointer; flex:none;">−</div>
+            <div style="font-family:'IBM Plex Mono', monospace; font-size:34px; font-weight:300; color:#ece7dc; font-feature-settings:'tnum'; line-height:1;">{{ pf }}<span style="font-size:14px; color:#99a1a8;">/{{ pfMax }}</span></div>
+            <div role="button" tabindex="0" onClick="{{ pfPiu }}" style="width:44px; height:44px; border:1px solid #3a4148; border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:19px; color:#a8b0b6; cursor:pointer; flex:none;">+</div>
+          </div>
+          <div role="button" tabindex="0" onClick="{{ openDanno }}" style="border-bottom:1px solid #b3453c; color:#e08076; padding:9px 0; font-size:15px; cursor:pointer;">Applica danno</div>
+          <div role="button" tabindex="0" onClick="{{ openCura }}" style="border-bottom:1px solid #7f9b8e; color:#9fbdaf; padding:9px 0; font-size:15px; cursor:pointer;">Medica</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; min-width:0;">
+          <div style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">SAN</div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div role="button" tabindex="0" onClick="{{ sanMeno }}" style="width:44px; height:44px; border:1px solid #3a4148; border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:19px; color:#a8b0b6; cursor:pointer; flex:none;">−</div>
+            <div style="font-family:'IBM Plex Mono', monospace; font-size:34px; font-weight:300; color:#ece7dc; font-feature-settings:'tnum'; line-height:1;">{{ san }}<span style="font-size:14px; color:#99a1a8;">/{{ sanMax }}</span></div>
+            <div role="button" tabindex="0" onClick="{{ sanPiu }}" style="width:44px; height:44px; border:1px solid #3a4148; border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:19px; color:#a8b0b6; cursor:pointer; flex:none;">+</div>
+          </div>
+          <div role="button" tabindex="0" onClick="{{ openSanita }}" style="border-bottom:1px solid #7f9b8e; color:#9fbdaf; padding:9px 0; font-size:15px; cursor:pointer;">Tiro Sanità</div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:7px;">
+        <div style="display:flex; gap:3px; flex-wrap:wrap;">
+          <sc-for list="{{ sanFori }}" as="f" hint-placeholder-count="30">
+            <span style="width:9px; height:18px; border-radius:1px; background: {{ f.fondo }}; border:1px solid {{ f.bordo }}; box-sizing:border-box;"></span>
+          </sc-for>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-family:'IBM Plex Mono', monospace; font-size:11px; color:#99a1a8; font-feature-settings:'tnum';">
+          <span>perse oggi {{ persiOggi }}</span>
+          <span style="color:#e08076;">soglia {{ sogliaFollia }}</span>
+          <span role="button" tabindex="0" onClick="{{ nuovaGiornata }}" style="color:#a8b0b6; cursor:pointer; border-bottom:1px solid #3a4148;">Nuova giornata</span>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr)); gap:14px;">
+        <div style="display:flex; flex-direction:column; gap:6px; min-width:0;">
+          <div style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">FORTUNA</div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div role="button" tabindex="0" onClick="{{ fortunaMeno }}" style="width:44px; height:44px; border:1px solid #3a4148; border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:19px; color:#a8b0b6; cursor:pointer; flex:none;">−</div>
+            <div role="button" tabindex="0" onClick="{{ tiraFortuna }}" style="font-family:'IBM Plex Mono', monospace; font-size:28px; font-weight:300; color:#ece7dc; font-feature-settings:'tnum'; cursor:pointer;">{{ fortuna }}</div>
+            <div role="button" tabindex="0" onClick="{{ fortunaPiu }}" style="width:44px; height:44px; border:1px solid #3a4148; border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:19px; color:#a8b0b6; cursor:pointer; flex:none;">+</div>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; min-width:0;">
+          <div style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">PM</div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div role="button" tabindex="0" onClick="{{ pmMeno }}" style="width:44px; height:44px; border:1px solid #3a4148; border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:19px; color:#a8b0b6; cursor:pointer; flex:none;">−</div>
+            <div style="font-family:'IBM Plex Mono', monospace; font-size:28px; font-weight:300; color:#ece7dc; font-feature-settings:'tnum';">{{ pm }}<span style="font-size:13px; color:#99a1a8;">/{{ pmMax }}</span></div>
+            <div role="button" tabindex="0" onClick="{{ pmPiu }}" style="width:44px; height:44px; border:1px solid #3a4148; border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:19px; color:#a8b0b6; cursor:pointer; flex:none;">+</div>
+          </div>
+        </div>
+      </div>
+
+      <sc-if value="{{ hasCondizioni }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          <sc-for list="{{ condizioni }}" as="c" hint-placeholder-count="2">
+            <span style="font-size:13px; padding:6px 10px; border-radius:2px; border:1px solid {{ c.colore }}; color: {{ c.colore }};">{{ c.nome }}</span>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px 8px; border-top:1px solid #2c3238; padding-top:14px;">
+        <sc-for list="{{ cars }}" as="c" hint-placeholder-count="8">
+          <div style="display:flex; flex-direction:column; gap:2px; min-width:0;">
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.1em; color:#99a1a8;">{{ c.k }}</span>
+            <sc-if value="{{ c.modifica }}" hint-placeholder-val="{{ false }}">
+              <input value="{{ c.v }}" onChange="{{ c.onCambia }}" style="width:100%; background:#15181b; border:1px solid #c8a465; border-radius:2px; padding:8px; font-family:'IBM Plex Mono', monospace; font-size:22px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+            </sc-if>
+            <sc-if value="{{ c.gioco }}" hint-placeholder-val="{{ true }}">
+              <span role="button" tabindex="0" onClick="{{ c.tira }}" style="font-family:'IBM Plex Mono', monospace; font-size:27px; font-weight:300; color:#ece7dc; font-feature-settings:'tnum'; line-height:1.05; cursor:pointer;">{{ c.v }}</span>
+            </sc-if>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#949ca3; font-feature-settings:'tnum';">{{ c.hq }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="border-top:1px solid #2c3238; padding-top:12px; display:flex; gap:8px 18px; flex-wrap:wrap;">
+        <sc-for list="{{ derivati }}" as="v" hint-placeholder-count="4">
+          <div style="display:flex; align-items:center; gap:7px; min-height:32px;">
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:13px; color:#99a1a8; letter-spacing:0.06em;">{{ v.k }}</span>
+            <sc-if value="{{ v.modifica }}" hint-placeholder-val="{{ false }}">
+              <input value="{{ v.v }}" onChange="{{ v.onCambia }}" style="width:64px; background:#15181b; border:1px solid {{ v.bordo }}; border-radius:2px; padding:8px; font-family:'IBM Plex Mono', monospace; font-size:15px; color:#ece7dc; min-height:40px; box-sizing:border-box;">
+            </sc-if>
+            <sc-if value="{{ v.gioco }}" hint-placeholder-val="{{ true }}">
+              <span role="button" tabindex="0" onClick="{{ v.tira }}" style="font-family:'IBM Plex Mono', monospace; font-size:15px; color:#e4dfd4; font-feature-settings:'tnum'; cursor: {{ v.cursore }};">{{ v.v }}</span>
+            </sc-if>
+            <sc-if value="{{ v.sovrascritto }}" hint-placeholder-val="{{ false }}">
+              <span role="button" tabindex="0" onClick="{{ v.ripristina }}" title="Valore inserito a mano — clicca per tornare al calcolo" style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.08em; color:#15181b; background:#c8a465; border-radius:2px; padding:3px 6px; cursor:pointer;">A MANO {{ v.calcolato }}</span>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </aside>
+
+    <main data-main>
+      <div style="display:flex; gap:20px; flex-wrap:wrap; border-bottom:1px solid #2c3238; padding-bottom:2px;">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="6">
+          <div role="button" tabindex="0" onClick="{{ t.vai }}" style="padding:12px 0; font-size:16px; white-space:nowrap; cursor:pointer; border-bottom:2px solid {{ t.bordo }}; color: {{ t.colore }};">{{ t.nome }}</div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ isAbilita }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; flex-direction:column; gap:14px; animation:esposizione 180ms ease-out;">
+          <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+            <input value="{{ ricerca }}" onChange="{{ onRicerca }}" placeholder="Cerca un'abilità" style="flex:1; min-width:180px; background:#1a1e22; border:1px solid #2c3238; border-bottom:1px solid #3a4148; border-radius:2px; padding:12px 12px; font-size:16px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+            <div role="button" tabindex="0" onClick="{{ toggleAllenate }}" style="font-size:15px; padding:11px 0; cursor:pointer; border-bottom:2px solid {{ allenateBordo }}; color: {{ allenateColore }};">Solo allenate</div>
+            <div role="button" tabindex="0" onClick="{{ openAggiungiAbilita }}" style="font-size:15px; padding:11px 0; cursor:pointer; border-bottom:2px solid #c8a465; color:#ece7dc;">Aggiungi abilità</div>
+          </div>
+          <div style="display:flex; flex-direction:column;">
+            <sc-for list="{{ abilita }}" as="s" hint-placeholder-count="14">
+              <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #252b30; min-height:44px;">
+                <div role="button" tabindex="0" onClick="{{ s.preferita }}" style="font-size:15px; width:22px; text-align:center; cursor:pointer; color: {{ s.stellaColore }};">✦</div>
+                <div role="button" tabindex="0" onClick="{{ s.tira }}" style="flex:1; min-width:0; cursor:pointer; display:flex; flex-direction:column; gap:1px;">
+                  <span style="font-size:16px; color:#e4dfd4;">{{ s.nome }}</span>
+                  <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:#939ba2;">{{ s.nota }}</span>
+                </div>
+                <sc-if value="{{ s.modifica }}" hint-placeholder-val="{{ false }}">
+                  <input value="{{ s.v }}" onChange="{{ s.onCambia }}" style="width:72px; background:#15181b; border:1px solid #c8a465; border-radius:2px; padding:8px; font-family:'IBM Plex Mono', monospace; font-size:19px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+                </sc-if>
+                <sc-if value="{{ s.gioco }}" hint-placeholder-val="{{ true }}">
+                  <div role="button" tabindex="0" onClick="{{ s.tira }}" style="font-family:'IBM Plex Mono', monospace; font-feature-settings:'tnum'; display:flex; align-items:baseline; gap:10px; cursor:pointer;">
+                    <span style="font-size:24px; font-weight:300; color:#ece7dc;">{{ s.v }}</span>
+                    <span style="font-size:13px; color:#949ca3; min-width:52px; text-align:right;">{{ s.hq }}</span>
+                  </div>
+                </sc-if>
+                <div role="button" tabindex="0" onClick="{{ s.spunta }}" style="width:26px; height:26px; border:1px solid {{ s.spuntaBordo }}; border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:14px; cursor:pointer; color: {{ s.spuntaColore }};">{{ s.spuntaSegno }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ abilitaVuote }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:28px 0; text-align:center; font-family:'Source Serif 4', Georgia, serif; font-size:18px; color:#949ca3;">Nessuna voce risponde a questo nome. Forse non l'ho mai imparata.</div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isCombattimento }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:18px; animation:esposizione 180ms ease-out;">
+          <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; font-family:'IBM Plex Mono', monospace; font-size:13px; color:#99a1a8; font-feature-settings:'tnum';">
+            <span>INIZIATIVA DES <span style="color:#ece7dc; font-size:20px;">{{ iniziativa }}</span></span>
+            <div role="button" tabindex="0" onClick="{{ toggleArmaPronta }}" style="font-size:14px; padding:10px 0; cursor:pointer; border-bottom:2px solid {{ prontaBordo }}; color: {{ prontaColore }}; font-family:'Archivo Narrow', sans-serif;">Arma da fuoco pronta</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; border-top:1px solid #2c3238; padding-top:14px;">
+            <div role="button" tabindex="0" onClick="{{ toggleRavvicinata }}" style="font-size:15px; padding:10px 0; cursor:pointer; border-bottom:2px solid {{ ravvicinataBordo }}; color: {{ ravvicinataColore }};">Gittata ravvicinata</div>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:18px; color:#d6c9ae; font-feature-settings:'tnum';">{{ ravvicinataDistanza }}</span>
+            <span style="font-size:14px; color:#939ba2;">dà un dado bonus</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">COLPI PER ROUND</span>
+            <div style="display:flex; gap:16px;">
+              <sc-for list="{{ opzioniColpi }}" as="o" hint-placeholder-count="3">
+                <span role="button" tabindex="0" onClick="{{ o.scegli }}" style="font-family:'IBM Plex Mono', monospace; font-size:17px; cursor:pointer; padding:9px 0; border-bottom:2px solid {{ o.bordo }}; color: {{ o.colore }};">{{ o.nome }}</span>
+              </sc-for>
+            </div>
+            <span style="font-size:14px; color:#939ba2;">{{ notaColpi }}</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">FASCE DI GITTATA</span>
+            <span style="font-family:'Source Serif 4', Georgia, serif; font-size:16px; line-height:1.55; color:#a8b0b6; max-width:64ch;">Fino alla gittata base il tiro è Normale, fino al doppio è Arduo, fino al quadruplo è Estremo. La difficoltà si sceglie nel pannello di tiro.</span>
+          </div>
+          <sc-for list="{{ armi }}" as="w" hint-placeholder-count="2">
+            <div style="border-top:1px solid #2c3238; padding-top:16px; display:flex; flex-direction:column; gap:12px;">
+              <div style="display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;">
+                <span style="font-size:21px; color:#ece7dc;">{{ w.nome }}</span>
+                <span style="font-family:'IBM Plex Mono', monospace; font-size:13px; color:#99a1a8; font-feature-settings:'tnum';">{{ w.riga }}</span>
+                <sc-if value="{{ w.inceppata }}" hint-placeholder-val="{{ false }}">
+                  <span style="font-size:13px; padding:4px 9px; border:1px solid #b3453c; color:#e08076; border-radius:2px;">Inceppata</span>
+                </sc-if>
+                <sc-if value="{{ w.inUso }}" hint-placeholder-val="{{ true }}">
+                  <span style="font-size:13px; padding:4px 9px; border:1px solid #c8a465; color:#c8a465; border-radius:2px;">In pugno</span>
+                </sc-if>
+                <sc-if value="{{ w.nonInUso }}" hint-placeholder-val="{{ false }}">
+                  <span role="button" tabindex="0" onClick="{{ w.usa }}" style="font-size:14px; color:#a8b0b6; border-bottom:1px solid #3a4148; cursor:pointer; padding:6px 0;">Impugna</span>
+                </sc-if>
+              </div>
+              <sc-if value="{{ w.haMunizioni }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                  <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">COLPI</span>
+                  <div style="display:flex; gap:5px;">
+                    <sc-for list="{{ w.colpi }}" as="c" hint-placeholder-count="6">
+                      <span style="width:9px; height:22px; border-radius:1px; background: {{ c.colore }}; border:1px solid #3a4148;"></span>
+                    </sc-for>
+                  </div>
+                  <span role="button" tabindex="0" onClick="{{ w.ricarica }}" style="font-size:14px; color:#a8b0b6; border-bottom:1px solid #3a4148; cursor:pointer; padding:8px 0;">Ricarica</span>
+                </div>
+              </sc-if>
+              <div style="display:flex; gap:18px; flex-wrap:wrap;">
+                <div role="button" tabindex="0" onClick="{{ w.attacca }}" style="font-size:16px; color:#ece7dc; border-bottom:2px solid #c8a465; padding:10px 0; cursor:pointer;">Attacca</div>
+                <div role="button" tabindex="0" onClick="{{ w.danno }}" style="font-size:16px; color:#a8b0b6; border-bottom:1px solid #3a4148; padding:10px 0; cursor:pointer;">Tira danno</div>
+                <div role="button" tabindex="0" onClick="{{ w.dannoEstremo }}" style="font-size:16px; color:#e08076; border-bottom:1px solid #b3453c; padding:10px 0; cursor:pointer;">Danno estremo</div>
+              </div>
+              <sc-if value="{{ w.ultimoDanno }}" hint-placeholder-val="{{ false }}">
+                <div style="font-family:'IBM Plex Mono', monospace; font-size:14px; color:#c8a465; font-feature-settings:'tnum';">{{ w.ultimoDanno }}</div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <div style="border-top:1px solid #2c3238; padding-top:16px; display:flex; flex-direction:column; gap:10px;">
+            <div style="font-family:'Source Serif 4', Georgia, serif; font-size:18px; color:#e4dfd4;">Da ricordare, quando si viene alle mani</div>
+            <div style="font-size:15px; line-height:1.6; color:#939ba2;">Chi contrattacca deve fare meglio dell'attaccante. Chi schiva basta che pareggi.</div>
+            <div style="font-size:15px; line-height:1.6; color:#939ba2;">Se ho già contrattaccato o schivato in questo round, gli altri che mi attaccano prendono un dado bonus. Non vale per le armi da fuoco.</div>
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding-top:4px;">
+              <span style="font-size:15px; color:#939ba2;">Manovra contro Struttura</span>
+              <input value="{{ strAvversario }}" onChange="{{ onStrAvversario }}" style="width:70px; background:#1a1e22; border:1px solid #2c3238; border-radius:2px; padding:10px; font-family:'IBM Plex Mono', monospace; font-size:16px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:14px; color:#c8a465;">{{ manovraEsito }}</span>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isInventario }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:24px; animation:esposizione 180ms ease-out;">
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">ARMI — QUELLA IN PUGNO È SEGNATA</span>
+            <sc-for list="{{ inventarioArmi }}" as="a" hint-placeholder-count="2">
+              <div style="display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid #252b30; min-height:44px;">
+                <div role="button" tabindex="0" onClick="{{ a.usa }}" style="width:44px; height:44px; flex:none; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                  <span style="width:14px; height:14px; border-radius:50%; border:1px solid {{ a.dotBordo }}; background: {{ a.dotFondo }};"></span>
+                </div>
+                <div role="button" tabindex="0" onClick="{{ a.usa }}" style="flex:1; min-width:0; cursor:pointer; display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:17px; color: {{ a.colore }};">{{ a.nome }}</span>
+                  <span style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#99a1a8;">{{ a.riga }}</span>
+                </div>
+                <sc-if value="{{ a.eliminabile }}" hint-placeholder-val="{{ true }}">
+                  <span role="button" tabindex="0" onClick="{{ a.elimina }}" style="font-size:14px; color:#949ca3; border-bottom:1px solid #2c3238; cursor:pointer; padding:9px 0;">Rimuovi</span>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:12px; border:1px solid #2c3238; border-radius:3px; padding:16px;">
+            <span style="font-family:'Source Serif 4', Georgia, serif; font-size:19px; color:#e4dfd4;">Metto a verbale una nuova arma</span>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px;">
+              <input value="{{ nuovoNome }}" onChange="{{ onNuovoNome }}" placeholder="Nome" style="background:#1a1e22; border:1px solid #2c3238; border-radius:2px; padding:12px; font-size:16px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+              <input value="{{ nuovoDanno }}" onChange="{{ onNuovoDanno }}" placeholder="Danno — es. 1D8+BD" style="background:#1a1e22; border:1px solid #2c3238; border-radius:2px; padding:12px; font-family:'IBM Plex Mono', monospace; font-size:16px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+              <input value="{{ nuovaGittata }}" onChange="{{ onNuovaGittata }}" placeholder="Gittata" style="background:#1a1e22; border:1px solid #2c3238; border-radius:2px; padding:12px; font-size:16px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+              <input value="{{ nuovoCaricatore }}" onChange="{{ onNuovoCaricatore }}" placeholder="Caricatore (0 se mischia)" style="background:#1a1e22; border:1px solid #2c3238; border-radius:2px; padding:12px; font-family:'IBM Plex Mono', monospace; font-size:16px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+              <input value="{{ nuovoMalf }}" onChange="{{ onNuovoMalf }}" placeholder="Malfunzionamento" style="background:#1a1e22; border:1px solid #2c3238; border-radius:2px; padding:12px; font-family:'IBM Plex Mono', monospace; font-size:16px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">ABILITÀ</span>
+              <div style="display:flex; gap:16px; flex-wrap:wrap;">
+                <sc-for list="{{ abilitaArma }}" as="o" hint-placeholder-count="2">
+                  <span role="button" tabindex="0" onClick="{{ o.scegli }}" style="font-size:15px; cursor:pointer; padding:9px 0; border-bottom:2px solid {{ o.bordo }}; color: {{ o.colore }};">{{ o.nome }}</span>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">TIPO</span>
+              <div style="display:flex; gap:16px;">
+                <sc-for list="{{ tipiArma }}" as="o" hint-placeholder-count="2">
+                  <span role="button" tabindex="0" onClick="{{ o.scegli }}" style="font-size:15px; cursor:pointer; padding:9px 0; border-bottom:2px solid {{ o.bordo }}; color: {{ o.colore }};">{{ o.nome }}</span>
+                </sc-for>
+              </div>
+              <span role="button" tabindex="0" onClick="{{ aggiungiArma }}" style="margin-left:auto; font-size:16px; color:#ece7dc; border-bottom:2px solid #c8a465; cursor:pointer; padding:9px 0;">Aggiungi</span>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:14px; border-top:1px solid #2c3238; padding-top:20px;">
+            <div style="display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;">
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">DENARO</span>
+              <span style="font-size:17px; color:#e4dfd4;">livello di vita: {{ denaroLivello }}</span>
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:13px; color:#99a1a8; font-feature-settings:'tnum';">Valore di Credito {{ vdc }}</span>
+              <span style="font-size:14px; color:#8d9299;">condizione sociale: {{ denaroSociale }}</span>
+            </div>
+            <div style="border:1px solid #c8a465; border-radius:2px; padding:16px; display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;">
+                <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#c8a465;">SPESA GIORNALIERA</span>
+                <span style="font-family:'IBM Plex Mono', monospace; font-size:36px; font-weight:600; line-height:1; color:#ece7dc; font-feature-settings:'tnum';">{{ denaroSpesa }}</span>
+              </div>
+              <div style="font-family:'Source Serif 4', Georgia, serif; font-size:17px; line-height:1.55; color:#d9d4c8; max-width:56ch; text-wrap:pretty;">Tutto quello che costa meno di così non lo segno e non lo scalo: caffè, tram, giornali, una stanza per la notte. Il denaro si aggiorna solo per le spese vere.</div>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px;">
+              <div style="display:flex; flex-direction:column; gap:5px;">
+                <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">CONTANTI</span>
+                <input value="{{ contanti }}" onChange="{{ onContanti }}" style="background:#1a1e22; border:1px solid #2c3238; border-radius:2px; padding:12px; font-family:'IBM Plex Mono', monospace; font-size:19px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+                <span style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#8d9299;">suggerito {{ denaroContanti }}</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:5px;">
+                <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">BENI E PROPRIETÀ</span>
+                <input value="{{ proprieta }}" onChange="{{ onProprieta }}" style="background:#1a1e22; border:1px solid #2c3238; border-radius:2px; padding:12px; font-family:'IBM Plex Mono', monospace; font-size:19px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+                <span style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#8d9299;">suggerito {{ denaroBeni }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:10px; border-top:1px solid #2c3238; padding-top:20px;">
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">EQUIPAGGIAMENTO</span>
+            <sc-for list="{{ equip }}" as="o" hint-placeholder-count="5">
+              <div style="display:flex; align-items:center; gap:14px; padding:10px 0; border-bottom:1px solid #252b30; min-height:44px;">
+                <span style="flex:1; min-width:0; font-family:'Source Serif 4', Georgia, serif; font-size:17px; color:#d9d4c8;">{{ o.nome }}</span>
+                <span role="button" tabindex="0" onClick="{{ o.elimina }}" style="font-size:14px; color:#949ca3; border-bottom:1px solid #2c3238; cursor:pointer; padding:9px 0;">Rimuovi</span>
+              </div>
+            </sc-for>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; padding-top:6px;">
+              <input value="{{ nuovoOggetto }}" onChange="{{ onNuovoOggetto }}" placeholder="Cosa mi metto in tasca" style="flex:1; min-width:200px; background:#1a1e22; border:1px solid #2c3238; border-radius:2px; padding:12px; font-size:16px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+              <span role="button" tabindex="0" onClick="{{ aggiungiOggetto }}" style="font-size:16px; color:#ece7dc; border-bottom:2px solid #c8a465; cursor:pointer; padding:11px 0;">Aggiungi</span>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isTrascorsi }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:22px; animation:esposizione 180ms ease-out;">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px;">
+            <sc-for list="{{ trascorsi }}" as="t" hint-placeholder-count="10">
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">{{ t.etichetta }}</span>
+                <textarea value="{{ t.testo }}" onChange="{{ t.onCambia }}" placeholder="{{ t.invito }}" style="min-height:84px; background:#1a1e22; border:1px solid #2c3238; border-radius:2px; padding:12px; font-family:'Source Serif 4', Georgia, serif; font-size:17px; line-height:1.55; color:#d9d4c8; resize:vertical; box-sizing:border-box;"></textarea>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:10px; border-top:1px solid #2c3238; padding-top:18px;">
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">COMPAGNI INVESTIGATORI</span>
+            <sc-for list="{{ compagni }}" as="c" hint-placeholder-count="1">
+              <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:8px 0; border-bottom:1px solid #252b30;">
+                <input value="{{ c.personaggio }}" onChange="{{ c.onPersonaggio }}" placeholder="Personaggio" style="flex:1; min-width:160px; background:#1a1e22; border:1px solid #2c3238; border-radius:2px; padding:11px; font-size:16px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+                <input value="{{ c.giocatore }}" onChange="{{ c.onGiocatore }}" placeholder="Giocatore" style="flex:1; min-width:140px; background:#1a1e22; border:1px solid #2c3238; border-radius:2px; padding:11px; font-size:16px; color:#a8b0b6; min-height:44px; box-sizing:border-box;">
+                <span role="button" tabindex="0" onClick="{{ c.elimina }}" style="font-size:14px; color:#949ca3; border-bottom:1px solid #2c3238; cursor:pointer; padding:9px 0;">Rimuovi</span>
+              </div>
+            </sc-for>
+            <span role="button" tabindex="0" onClick="{{ aggiungiCompagno }}" style="align-self:flex-start; font-size:16px; color:#ece7dc; border-bottom:2px solid #c8a465; cursor:pointer; padding:10px 0;">Aggiungi un compagno</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:8px; border-top:1px solid #2c3238; padding-top:18px;">
+            <div style="display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;">
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">NOTE E INDIZI</span>
+              <span role="button" tabindex="0" onClick="{{ timbraOra }}" style="font-family:'IBM Plex Mono', monospace; font-size:13px; color:#c8a465; border-bottom:1px solid #3a4148; cursor:pointer; padding:8px 0;">Segna l'ora</span>
+            </div>
+            <textarea value="{{ note }}" onChange="{{ onNote }}" placeholder="Quello che ho visto stanotte, prima di dimenticarlo." style="min-height:200px; background:#1a1e22; border:1px solid #2c3238; border-radius:2px; padding:14px; font-family:'Source Serif 4', Georgia, serif; font-size:18px; line-height:1.6; color:#e4dfd4; resize:vertical; box-sizing:border-box;"></textarea>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isRegistro }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:14px; animation:esposizione 180ms ease-out;">
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div role="button" tabindex="0" onClick="{{ annulla }}" style="font-size:15px; color:#e4dfd4; border-bottom:1px solid #c8a465; padding:10px 0; cursor:pointer;">Annulla ultima azione</div>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#939ba2;">{{ annullaNota }}</span>
+          </div>
+          <sc-if value="{{ registroVuoto }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:34px 0; text-align:center; font-family:'Source Serif 4', Georgia, serif; font-size:18px; color:#949ca3;">La serata non ha ancora lasciato tracce.</div>
+          </sc-if>
+          <sc-for list="{{ registro }}" as="r" hint-placeholder-count="4">
+            <div style="display:flex; gap:14px; padding:11px 0; border-bottom:1px solid #252b30;">
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#939ba2; font-feature-settings:'tnum'; flex:none;">{{ r.ora }}</span>
+              <div style="display:flex; flex-direction:column; gap:2px; min-width:0;">
+                <span style="font-size:15px; color:#d9d4c8;">{{ r.titolo }}</span>
+                <span style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#99a1a8; font-feature-settings:'tnum';">{{ r.dettaglio }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isSviluppo }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:16px; animation:esposizione 180ms ease-out;">
+          <div style="font-family:'Source Serif 4', Georgia, serif; font-size:20px; color:#e4dfd4;">Fine scenario. Conto quello che ho imparato.</div>
+          <div style="font-size:15px; line-height:1.6; color:#939ba2; max-width:60ch;">Ogni abilità spuntata tira 1D100. Se il risultato supera il valore, oppure supera 95, guadagna 1D10. La spunta si toglie comunque.</div>
+          <div style="display:flex; flex-direction:column;">
+            <sc-for list="{{ sviluppo }}" as="d" hint-placeholder-count="1">
+              <div style="display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid #252b30;">
+                <span style="flex:1; font-size:16px; color:#e4dfd4;">{{ d.nome }}</span>
+                <span style="font-family:'IBM Plex Mono', monospace; font-size:14px; color:#99a1a8; font-feature-settings:'tnum';">{{ d.esito }}</span>
+                <span style="font-family:'IBM Plex Mono', monospace; font-size:22px; color: {{ d.colore }}; font-feature-settings:'tnum';">{{ d.valore }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ sviluppoVuoto }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:28px 0; text-align:center; font-family:'Source Serif 4', Georgia, serif; font-size:18px; color:#949ca3;">Nessuna spunta. Questo scenario non mi ha insegnato niente.</div>
+          </sc-if>
+          <div style="display:flex; gap:18px; flex-wrap:wrap;">
+            <div role="button" tabindex="0" onClick="{{ eseguiSviluppo }}" style="font-size:16px; color:#ece7dc; border-bottom:2px solid #c8a465; padding:10px 0; cursor:pointer;">Tira per tutte</div>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:14px; color:#9fbdaf; padding:10px 0;">{{ sviluppoRiepilogo }}</span>
+          </div>
+          <div style="border-top:1px solid #2c3238; padding-top:18px; display:flex; flex-direction:column; gap:10px;">
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">RECUPERO DI FINE SESSIONE — OPZIONALE</span>
+            <span style="font-family:'Source Serif 4', Georgia, serif; font-size:17px; line-height:1.55; color:#a8b0b6; max-width:60ch; text-wrap:pretty;">Tiro 1D100 sulla Fortuna. Se il numero la supera, ne guadagno 1D10, fino a un massimo di 99. Se non la supera, resta come sta.</span>
+            <div style="display:flex; gap:18px; align-items:center; flex-wrap:wrap;">
+              <span role="button" tabindex="0" onClick="{{ recuperoFortuna }}" style="font-size:16px; color:#ece7dc; border-bottom:2px solid #c8a465; cursor:pointer; padding:10px 0;">Tira il recupero</span>
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:14px; color:#c8a465; font-feature-settings:'tnum';">{{ fortunaRecupero }}</span>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isInvestigatori }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:18px; animation:esposizione 180ms ease-out;">
+
+          <sc-if value="{{ nessunInvestigatore }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:44px 0; display:flex; flex-direction:column; gap:16px; align-items:flex-start; max-width:52ch;">
+              <div style="font-family:'Source Serif 4', Georgia, serif; font-size:24px; line-height:1.35; color:#ece7dc; text-wrap:pretty;">Il taccuino è nuovo. Nessun nome scritto in prima pagina.</div>
+              <div style="font-family:'Source Serif 4', Georgia, serif; font-size:17px; line-height:1.6; color:#a8b0b6;">Apro una scheda vuota e la compilo in Modalità Modifica, oppure recupero un file che ho già salvato.</div>
+              <div style="display:flex; gap:20px; flex-wrap:wrap; padding-top:6px;">
+                <span role="button" tabindex="0" onClick="{{ nuovaScheda }}" style="font-size:17px; color:#ece7dc; border-bottom:2px solid #c8a465; cursor:pointer; padding:10px 0;">Scheda vuota</span>
+                <span role="button" tabindex="0" onClick="{{ importa }}" style="font-size:17px; color:#a8b0b6; border-bottom:1px solid #3a4148; cursor:pointer; padding:10px 0;">Importa un file</span>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ haInvestigatori }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; flex-direction:column;">
+              <sc-for list="{{ investigatori }}" as="i" hint-placeholder-count="2">
+                <div style="display:flex; align-items:center; gap:14px; padding:14px 0; border-bottom:1px solid #252b30; border-left:3px solid {{ i.barra }}; padding-left:12px; min-height:44px;">
+                  <div style="width:44px; height:52px; flex:none; background:#242a30; border:1px solid #3a4148; display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono', monospace; font-size:14px; color:#99a1a8;">{{ i.iniziali }}</div>
+                  <div role="button" tabindex="0" onClick="{{ i.apri }}" style="display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; cursor:pointer;">
+                    <span style="font-size:18px; color: {{ i.colore }};">{{ i.nome }}</span>
+                    <span style="font-size:13px; color:#99a1a8;">{{ i.nota }}</span>
+                  </div>
+                  <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.08em; color: {{ i.statoColore }}; flex:none;">{{ i.stato }}</span>
+                  <div style="display:flex; gap:14px; flex:none;">
+                    <span role="button" tabindex="0" onClick="{{ i.duplica }}" style="font-size:14px; color:#a8b0b6; border-bottom:1px solid #3a4148; cursor:pointer; padding:9px 0;">Duplica</span>
+                    <span role="button" tabindex="0" onClick="{{ i.elimina }}" style="font-size:14px; color:#e08076; border-bottom:1px solid #b3453c; cursor:pointer; padding:9px 0;">Elimina</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex; gap:20px; flex-wrap:wrap; padding-top:6px;">
+              <span role="button" tabindex="0" onClick="{{ nuovaScheda }}" style="font-size:16px; color:#ece7dc; border-bottom:2px solid #c8a465; cursor:pointer; padding:10px 0;">Scheda vuota</span>
+              <span role="button" tabindex="0" onClick="{{ importa }}" style="font-size:16px; color:#a8b0b6; border-bottom:1px solid #3a4148; cursor:pointer; padding:10px 0;">Importa file</span>
+              <span role="button" tabindex="0" onClick="{{ esporta }}" style="font-size:16px; color:#a8b0b6; border-bottom:1px solid #3a4148; cursor:pointer; padding:10px 0;">Esporta la scheda aperta</span>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ erroreImport }}" hint-placeholder-val="{{ false }}">
+            <div style="border-left:3px solid #b3453c; background:#1e2429; border-radius:2px; padding:16px; display:flex; flex-direction:column; gap:8px; max-width:60ch;">
+              <span style="font-size:17px; color:#e08076;">Questo file non è una scheda leggibile</span>
+              <span style="font-family:'Source Serif 4', Georgia, serif; font-size:16px; line-height:1.55; color:#a8b0b6;">Manca il numero di versione dello schema, oppure è più recente di quello che questa scheda sa leggere. Non ho toccato niente: l'investigatore aperto è rimasto come stava.</span>
+              <div style="display:flex; gap:18px; flex-wrap:wrap; padding-top:4px;">
+                <span role="button" tabindex="0" onClick="{{ importa }}" style="font-size:15px; color:#ece7dc; border-bottom:1px solid #c8a465; cursor:pointer; padding:9px 0;">Riprova con un altro file</span>
+                <span role="button" tabindex="0" onClick="{{ chiudiErrore }}" style="font-size:15px; color:#949ca3; border-bottom:1px solid #2c3238; cursor:pointer; padding:9px 0;">Chiudi</span>
+              </div>
+            </div>
+          </sc-if>
+
+          <div style="border-top:1px solid #2c3238; padding-top:16px; display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#8d9299;">DIMOSTRAZIONE DEGLI STATI</span>
+            <span role="button" tabindex="0" onClick="{{ svuota }}" style="font-size:15px; color:#949ca3; border-bottom:1px solid #2c3238; cursor:pointer; padding:9px 0;">{{ svuotaLabel }}</span>
+            <span role="button" tabindex="0" onClick="{{ fileNonValido }}" style="font-size:15px; color:#949ca3; border-bottom:1px solid #2c3238; cursor:pointer; padding:9px 0;">File non valido</span>
+          </div>
+        </div>
+      </sc-if>
+
+    </main>
+    <sc-if value="{{ pannelloAperto }}" hint-placeholder-val="{{ false }}">
+      <div data-pannello>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.12em; color:#99a1a8;">TIRI</span>
+          <span role="button" tabindex="0" onClick="{{ chiudiPannello }}" style="margin-left:auto; font-size:15px; color:#a8b0b6; cursor:pointer; padding:10px 0;">Chiudi</span>
+        </div>
+        <sc-for list="{{ tiri }}" as="r" hint-placeholder-count="1">
+          <div style="display:flex; flex-direction:column; gap:12px; padding-bottom:16px; border-bottom:1px solid #2c3238; opacity: {{ r.opacita }};">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; gap:10px;">
+              <span style="font-size:20px; color:#ece7dc;">{{ r.nome }}</span>
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:13px; color:#99a1a8; font-feature-settings:'tnum';">{{ r.hq }}</span>
+            </div>
+            <sc-if value="{{ r.attivo }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div style="display:flex; gap:20px;">
+                  <sc-for list="{{ r.difficolta }}" as="d" hint-placeholder-count="3">
+                    <span role="button" tabindex="0" onClick="{{ d.scegli }}" style="font-size:15px; cursor:pointer; padding-bottom:4px; border-bottom:2px solid {{ d.bordo }}; color: {{ d.colore }};">{{ d.nome }}</span>
+                  </sc-for>
+                </div>
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                  <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">DADI</span>
+                  <div style="display:flex; gap:14px;">
+                    <sc-for list="{{ r.dadi }}" as="d" hint-placeholder-count="5">
+                      <span role="button" tabindex="0" onClick="{{ d.scegli }}" style="font-family:'IBM Plex Mono', monospace; font-size:15px; cursor:pointer; padding-bottom:4px; border-bottom:2px solid {{ d.bordo }}; color: {{ d.colore }}; font-feature-settings:'tnum';">{{ d.nome }}</span>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="display:flex; gap:18px; flex-wrap:wrap;">
+                  <span role="button" tabindex="0" onClick="{{ r.tiraVirtuale }}" style="font-size:16px; color:#ece7dc; border-bottom:2px solid #c8a465; padding:9px 0; cursor:pointer;">Tira</span>
+                  <span role="button" tabindex="0" onClick="{{ r.modoFisico }}" style="font-size:16px; cursor:pointer; padding:9px 0; border-bottom:1px solid {{ r.fisicoBordo }}; color: {{ r.fisicoColore }};">Dadi fisici</span>
+                </div>
+                <sc-if value="{{ r.fisico }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex; flex-direction:column; gap:10px; border-left:2px solid #3a4148; padding-left:12px;">
+                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                      <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:#99a1a8;">UNITÀ</span>
+                      <input value="{{ r.unitaIns }}" onChange="{{ r.onUnitaIns }}" placeholder="0—9" style="width:74px; background:#1a1e22; border:1px solid #2c3238; border-radius:2px; padding:10px; font-family:'IBM Plex Mono', monospace; font-size:16px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+                      <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:#99a1a8;">DECINE</span>
+                      <input value="{{ r.decineIns }}" onChange="{{ r.onDecineIns }}" placeholder="00 30" style="width:110px; background:#1a1e22; border:1px solid #2c3238; border-radius:2px; padding:10px; font-family:'IBM Plex Mono', monospace; font-size:16px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+                    </div>
+                    <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
+                      <span role="button" tabindex="0" onClick="{{ r.confermaDadi }}" style="font-size:15px; color:#ece7dc; border-bottom:1px solid #c8a465; cursor:pointer; padding:10px 0;">Applica i dadi</span>
+                      <span style="font-size:13px; color:#8d9299;">Fino a tre decine, separate da uno spazio.</span>
+                    </div>
+                  </div>
+                  <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:#99a1a8;">OPPURE IL RISULTATO</span>
+                    <input value="{{ r.inserito }}" onChange="{{ r.onInserito }}" placeholder="es. 24" style="width:90px; background:#1a1e22; border:1px solid #2c3238; border-radius:2px; padding:10px; font-family:'IBM Plex Mono', monospace; font-size:16px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+                    <span role="button" tabindex="0" onClick="{{ r.confermaFisico }}" style="font-size:15px; color:#a8b0b6; border-bottom:1px solid #3a4148; cursor:pointer; padding:10px 0;">Applica</span>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{ r.haEsito }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <div style="display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+                  <div style="display:flex; gap:8px; align-items:flex-end;">
+                    <sc-for list="{{ r.decine }}" as="t" hint-placeholder-count="1">
+                      <div style="text-align:center;">
+                        <div style="font-family:'IBM Plex Mono', monospace; font-size:24px; font-weight:300; font-feature-settings:'tnum'; color: {{ t.colore }};">{{ t.v }}</div>
+                        <div style="height:1px; margin-top:4px; background: {{ t.colore }};"></div>
+                      </div>
+                    </sc-for>
+                    <div style="font-family:'IBM Plex Mono', monospace; font-size:18px; color:#4d4842; padding-bottom:6px;">+</div>
+                    <div style="text-align:center;">
+                      <div style="font-family:'IBM Plex Mono', monospace; font-size:24px; font-weight:300; color:#d9d4c8; font-feature-settings:'tnum';">{{ r.unita }}</div>
+                      <div style="height:1px; background:#3a4148; margin-top:4px;"></div>
+                    </div>
+                  </div>
+                  <div style="margin-left:auto; text-align:right;">
+                    <div style="font-family:'IBM Plex Mono', monospace; font-size:52px; font-weight:300; line-height:0.9; color:#ece7dc; font-feature-settings:'tnum';">{{ r.valore }}</div>
+                    <div style="font-family:'IBM Plex Mono', monospace; font-size:13px; letter-spacing:0.14em; padding-top:6px; color: {{ r.livelloColore }};">{{ r.livello }}</div>
+                  </div>
+                </div>
+                <div style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#939ba2; font-feature-settings:'tnum';">{{ r.riga }}</div>
+                <sc-if value="{{ r.avviso }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size:14px; line-height:1.55; color:#e08076; border-left:2px solid #b3453c; padding-left:10px;">{{ r.avviso }}</div>
+                </sc-if>
+                <sc-if value="{{ r.attivo }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex; flex-direction:column; gap:8px; padding-top:2px;">
+                    <sc-for list="{{ r.azioni }}" as="a" hint-placeholder-count="2">
+                      <span role="button" tabindex="0" onClick="{{ a.fai }}" style="font-size:15px; line-height:1.45; cursor: {{ a.cursore }}; padding:9px 0; border-bottom:1px solid {{ a.bordo }}; color: {{ a.colore }}; align-self:flex-start; text-wrap:pretty;">{{ a.nome }}</span>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <sc-if value="{{ true }}" hint-placeholder-val="{{ true }}">
+    <div data-barra style="position:fixed; left:0; right:0; bottom:0; background:#1a1e22; border-top:1px solid #2c3238; z-index:6;">
+      <sc-for list="{{ barra }}" as="b" hint-placeholder-count="5">
+        <div role="button" tabindex="0" onClick="{{ b.vai }}" style="flex:1; min-height:56px; display:flex; align-items:center; justify-content:center; font-size:13px; cursor:pointer; border-top:2px solid {{ b.bordo }}; color: {{ b.colore }};">{{ b.nome }}</div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ modale }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; inset:0; background:rgba(10,12,14,0.74); display:flex; align-items:center; justify-content:center; padding:16px; z-index:20;">
+      <div style="width:100%; max-width:440px; background:#1e2429; border:1px solid #3a4148; border-radius:3px; padding:22px; display:flex; flex-direction:column; gap:16px; animation:esposizione 180ms ease-out;">
+        <div style="font-family:'Source Serif 4', Georgia, serif; font-size:21px; color:#ece7dc;">{{ modaleTitolo }}</div>
+        <sc-if value="{{ modaleTesto }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:15px; line-height:1.6; color:#939ba2;">{{ modaleTesto }}</div>
+        </sc-if>
+        <sc-if value="{{ modaleInput }}" hint-placeholder-val="{{ false }}">
+          <input value="{{ modaleValore }}" onChange="{{ onModaleValore }}" placeholder="{{ modalePlaceholder }}" style="background:#15181b; border:1px solid #3a4148; border-radius:2px; padding:14px; font-family:'IBM Plex Mono', monospace; font-size:20px; color:#ece7dc; min-height:52px; box-sizing:border-box;">
+        </sc-if>
+        <sc-if value="{{ modaleEsito }}" hint-placeholder-val="{{ false }}">
+          <div style="border-left:2px solid #c8a465; padding-left:12px; display:flex; flex-direction:column; gap:4px;">
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:26px; color:#ece7dc; font-feature-settings:'tnum';">{{ modaleEsito }}</span>
+            <span style="font-size:14px; color:#939ba2; line-height:1.5;">{{ modaleDettaglio }}</span>
+          </div>
+        </sc-if>
+        <sc-if value="{{ modaleAbilita }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; flex-direction:column; gap:18px;">
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">SPECIALIZZAZIONE</span>
+              <div style="display:flex; gap:14px; flex-wrap:wrap;">
+                <sc-for list="{{ radiciSpec }}" as="o" hint-placeholder-count="7">
+                  <span role="button" tabindex="0" onClick="{{ o.scegli }}" style="font-size:15px; cursor:pointer; padding:9px 0; border-bottom:2px solid {{ o.bordo }}; color: {{ o.colore }};">{{ o.nome }}</span>
+                </sc-for>
+              </div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; padding-top:4px;">
+                <sc-for list="{{ opzioniSpec }}" as="o" hint-placeholder-count="5">
+                  <span role="button" tabindex="0" onClick="{{ o.aggiungi }}" style="font-size:14px; padding:9px 11px; border:1px solid {{ o.bordo }}; border-radius:2px; cursor: {{ o.cursore }}; color: {{ o.colore }};">{{ o.nome }}</span>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px; border-top:1px solid #2c3238; padding-top:14px;">
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">ABILITÀ NON COMUNI</span>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <sc-for list="{{ opzioniNonComuni }}" as="o" hint-placeholder-count="6">
+                  <span role="button" tabindex="0" onClick="{{ o.aggiungi }}" style="font-size:14px; padding:9px 11px; border:1px solid {{ o.bordo }}; border-radius:2px; cursor: {{ o.cursore }}; color: {{ o.colore }};">{{ o.nome }}</span>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px; border-top:1px solid #2c3238; padding-top:14px;">
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">ABILITÀ PERSONALIZZATA</span>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <input value="{{ nuovaAbNome }}" onChange="{{ onNuovaAbNome }}" placeholder="Nome" style="flex:1; min-width:150px; background:#15181b; border:1px solid #3a4148; border-radius:2px; padding:11px; font-size:16px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+                <input value="{{ nuovaAbBase }}" onChange="{{ onNuovaAbBase }}" placeholder="Base" style="width:80px; background:#15181b; border:1px solid #3a4148; border-radius:2px; padding:11px; font-family:'IBM Plex Mono', monospace; font-size:16px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+                <span role="button" tabindex="0" onClick="{{ aggiungiAbilitaLibera }}" style="font-size:16px; color:#ece7dc; border-bottom:2px solid #c8a465; cursor:pointer; padding:11px 0;">Aggiungi</span>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ modaleConfronto }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">LIVELLO DELL'AVVERSARIO</span>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <sc-for list="{{ livelliAvv }}" as="o" hint-placeholder-count="6">
+                  <span role="button" tabindex="0" onClick="{{ o.scegli }}" style="font-family:'IBM Plex Mono', monospace; font-size:13px; letter-spacing:0.06em; padding:9px 10px; border:1px solid {{ o.bordo }}; border-radius:2px; cursor:pointer; color: {{ o.colore }};">{{ o.nome }}</span>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">ABILITÀ</span>
+              <input value="{{ confValore }}" onChange="{{ onConfValore }}" placeholder="es. 55" style="width:96px; background:#15181b; border:1px solid #3a4148; border-radius:2px; padding:11px; font-family:'IBM Plex Mono', monospace; font-size:18px; color:#ece7dc; min-height:44px; box-sizing:border-box;">
+            </div>
+            <div style="border-left:2px solid #c8a465; padding-left:12px; font-family:'Source Serif 4', Georgia, serif; font-size:17px; line-height:1.55; color:#e4dfd4; text-wrap:pretty;">{{ confEsito }}</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ modaleImp }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <sc-for list="{{ impostazioni }}" as="o" hint-placeholder-count="2">
+              <div style="display:flex; gap:14px; align-items:flex-start; border-bottom:1px solid #252b30; padding-bottom:14px;">
+                <div style="display:flex; flex-direction:column; gap:3px; flex:1; min-width:0;">
+                  <span style="font-size:17px; color:#e4dfd4;">{{ o.nome }}</span>
+                  <span style="font-size:14px; line-height:1.5; color:#8d9299; text-wrap:pretty;">{{ o.nota }}</span>
+                </div>
+                <span role="button" tabindex="0" onClick="{{ o.cambia }}" style="flex:none; font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:0.08em; padding:10px 12px; border:1px solid {{ o.bordo }}; border-radius:2px; cursor:pointer; color: {{ o.colore }};">{{ o.stato }}</span>
+              </div>
+            </sc-for>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:#99a1a8;">UNITÀ DELLA GITTATA RAVVICINATA</span>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <sc-for list="{{ unitaOpzioni }}" as="o" hint-placeholder-count="2">
+                  <span role="button" tabindex="0" onClick="{{ o.scegli }}" style="font-size:15px; padding:10px 12px; border:1px solid {{ o.bordo }}; border-radius:2px; cursor:pointer; color: {{ o.colore }};">{{ o.nome }}</span>
+                </sc-for>
+              </div>
+              <span style="font-size:14px; line-height:1.5; color:#8d9299; max-width:52ch; text-wrap:pretty;">Il calcolo resta DES diviso 5 in piedi: questo interruttore cambia solo come leggo il numero.</span>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ modaleStati }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; flex-wrap:wrap; gap:10px;">
+            <sc-for list="{{ statiTutti }}" as="s" hint-placeholder-count="7">
+              <span role="button" tabindex="0" onClick="{{ s.togli }}" style="font-size:14px; padding:10px 12px; border-radius:2px; cursor:pointer; border:1px solid {{ s.bordo }}; color: {{ s.colore }};">{{ s.nome }}</span>
+            </sc-for>
+          </div>
+        </sc-if>
+        <div style="display:flex; gap:18px; justify-content:flex-end; flex-wrap:wrap; padding-top:4px;">
+          <sc-for list="{{ modaleAzioni }}" as="a" hint-placeholder-count="2">
+            <span role="button" tabindex="0" onClick="{{ a.fai }}" style="font-size:16px; cursor:pointer; padding:10px 0; border-bottom:1px solid {{ a.bordo }}; color: {{ a.colore }};">{{ a.nome }}</span>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900}}">
+const ETICHETTA_MISCHIA = 'Combattere';
+// Condizione sociale [RI]: fasce del punteggio, distinte dal livello di vita della tabella del denaro [MB].
+const SOCIALE = [[0, 'Squattrinato'], [9, 'Povero'], [49, 'Medio'], [89, 'Benestante'], [98, 'Ricco'], [99, 'Nababbo']];
+function sociale(v) { for (let i = 0; i < SOCIALE.length; i++) { if (v <= SOCIALE[i][0]) return SOCIALE[i][1]; } return 'Nababbo'; }
+// Ordine dei livelli, dal peggiore al migliore: serve ai tiri contrastati §5.4.
+const ORDINE = ['DISASTRO', 'FALLIMENTO', 'NORMALE', 'ARDUO', 'ESTREMO', 'CRITICO'];
+const BASE = [
+  ['Ammaliare',15],['Antropologia',1],['Archeologia',1],['Arti e Mestieri','Fotografia',5],['Ascoltare',20],
+  ['Biblioteconomia',20],['Camuffare',5],['Cavalcare',5],['Contabilità',5],['Furtività',20],['Guidare Auto',20],
+  ['Individuare',25],['Intimidire',15],['Lanciare',20],['Legge',5],['Lingua','Italiano',1],['Lingua Madre','Inglese',80],
+  ['Manovrare Macchinari Pesanti',1],['Medicina',1],['Miti di Cthulhu',0],['Naturalistica',10],['Navigare',10],
+  ['Nuotare',20],['Occultismo',5],['Persuadere',10],['Pilotare','Aerei',1],['Primo Soccorso',30],['Psicoanalisi',1],
+  ['Psicologia',10],['Raggirare',5],['Rapidità di Mano',10],['Riparazioni Elettriche',10],['Riparazioni Meccaniche',10],
+  ['Saltare',20],['Scalare',20],['Scassinare',1],['Schivare',32],['Scienza','Chimica',1],['Seguire Tracce',10],
+  ['Sopravvivenza','Bosco',10],['Storia',5],['Valore di Credito',0],['Valutare',1],
+  [ETICHETTA_MISCHIA,'Rissa',25],['Armi da Fuoco','Pistola',20]
+];
+// Specializzazioni: chiave = abilità multi-istanza, valore = nome → base.
+const SPEC = {
+  'Arti e Mestieri': { 'Belle Arti': 5, 'Falegnameria': 5, 'Fotografia': 5, 'Recitazione': 5 },
+  'Scienza': { 'Astronomia': 1, 'Biologia': 1, 'Botanica': 1, 'Chimica': 1, 'Farmacia': 1, 'Fisica': 1, 'Geologia': 1, 'Matematica': 10, 'Zoologia': 1 },
+  'Lingua': { 'Francese': 1, 'Italiano': 1, 'Latino': 1, 'Tedesco': 1 },
+  'Pilotare': { 'Aerei': 1, 'Dirigibili': 1, 'Imbarcazioni': 1 },
+  'Sopravvivenza': { 'Artico': 10, 'Bosco': 10, 'Deserto': 10, 'Mare': 10 },
+  [ETICHETTA_MISCHIA]: { 'Rissa': 25, 'Ascia': 15, 'Frusta': 5, 'Garrota': 15, 'Lancia': 20, 'Mazzafrusto': 10, 'Spada': 20 },
+  'Armi da Fuoco': { 'Pistola': 20, 'Fucile/Shotgun': 25, 'Arco': 15, 'Mitra': 15, 'Mitragliatrice': 10, 'Lanciafiamme': 10, 'Armi Pesanti': 10 }
+};
+const NON_COMUNI = { 'Artiglieria': 1, 'Demolizioni': 1, 'Ipnosi': 1, 'Addestrare Animali': 5, 'Lettura Labiale': 1, 'Sommozzatore': 1 };
+// Denaro anni '20: [soglia max VdC, livello, spesa giornaliera, ×contanti, ×beni]
+const DENARO = [
+  [0,  'Miserabile', 0.5, null, null],
+  [9,  'Povero', 2, 1, 10],
+  [49, 'Medio', 10, 2, 50],
+  [89, 'Benestante', 30, 5, 200],
+  [98, 'Ricco', 250, 20, 2000],
+  [99, 'Sfacciatamente ricco', 5000, null, null]
+];
+function denaro(vdc) {
+  const f = DENARO.find(function (r) { return vdc <= r[0]; }) || DENARO[DENARO.length - 1];
+  const eur = function (n) { return n.toLocaleString('it-IT', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2, useGrouping: true }) + ' $'; };
+  let contanti, beni;
+  if (vdc === 0) { contanti = eur(0.5); beni = 'nessuno'; }
+  else if (vdc === 99) { contanti = eur(50000); beni = eur(5000000) + ' o più'; }
+  else { contanti = eur(vdc * f[3]); beni = eur(vdc * f[4]); }
+  return { livello: f[1], spesa: eur(f[2]), contanti: contanti, beni: beni };
+}
+const ALLENATE = {
+  'Lingua Madre (Inglese)': 80, 'Biblioteconomia': 60, 'Persuadere': 60, 'Individuare': 55, 'Psicologia': 50,
+  'Arti e Mestieri (Fotografia)': 45, 'Storia': 40, 'Furtività': 40, 'Ascoltare': 40,
+  'Armi da Fuoco (Pistola)': 35, 'Lingua (Italiano)': 31, 'Valore di Credito': 35, 'Schivare': 32
+};
+const AMBRA = '#c8a465', LUCE = '#ece7dc', FISS = '#7f9b8e', ROSSO = '#b3453c', GRIGIO = '#99a1a8', SOFT = '#a8b0b6';
+
+function rnd(n) {
+  const a = new Uint32Array(1);
+  (window.crypto || window.msCrypto).getRandomValues(a);
+  return (a[0] % n) + 1;
+}
+function meta(v) { return Math.floor(v / 2) + ' · ' + Math.floor(v / 5); }
+function tira(expr, bd) {
+  const src = String(expr).replace(/½BD/gi, bd.half).replace(/BD/gi, bd.full);
+  let tot = 0, det = [];
+  src.split(/(?=[+-])/).forEach(function (raw) {
+    const t = raw.trim(); if (!t || t === '+' || t === '-') return;
+    const seg = t.replace(/^\+/, ''); const neg = seg.startsWith('-');
+    const body = seg.replace(/^-/, '');
+    const m = body.match(/^(\d*)[dD](\d+)$/);
+    if (m) {
+      const n = parseInt(m[1] || '1', 10), f = parseInt(m[2], 10);
+      let s = 0; for (let i = 0; i < n; i++) s += rnd(f);
+      tot += neg ? -s : s; det.push(body + '=' + s);
+    } else if (body && !isNaN(parseInt(body, 10))) {
+      const c = parseInt(body, 10); tot += neg ? -c : c; det.push((neg ? '-' : '') + c);
+    }
+  });
+  return { tot: Math.max(0, tot), det: det.join(' ') };
+}
+function massimo(expr, bd) {
+  const src = String(expr).replace(/½BD/gi, bd.half).replace(/BD/gi, bd.full);
+  let tot = 0;
+  src.split(/(?=[+-])/).forEach(function (raw) {
+    const t = raw.trim(); if (!t) return;
+    const seg = t.replace(/^\+/, ''); const neg = seg.startsWith('-'); const body = seg.replace(/^-/, '');
+    const m = body.match(/^(\d*)[dD](\d+)$/);
+    if (m) { const s = parseInt(m[1] || '1', 10) * parseInt(m[2], 10); tot += neg ? -s : s; }
+    else if (body && !isNaN(parseInt(body, 10))) { const c = parseInt(body, 10); tot += neg ? -c : c; }
+  });
+  return Math.max(0, tot);
+}
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const skills = BASE.map(function (b) {
+      const nome = b.length === 3 ? b[0] + ' (' + b[1] + ')' : b[0];
+      const base = b.length === 3 ? b[2] : b[1];
+      const v = ALLENATE[nome] != null ? ALLENATE[nome] : base;
+      return {
+        nome: nome, base: base, v: v,
+        spunta: nome === 'Individuare',
+        preferita: nome === 'Individuare' || nome === 'Ascoltare' || nome === 'Armi da Fuoco (Pistola)',
+        nonSpuntabile: nome === 'Miti di Cthulhu' || nome === 'Valore di Credito',
+        spec: b.length === 3 ? b[1] : null, radice: b[0]
+      };
+    });
+    this.state = {
+      mode: 'gioco', tab: 'abilita',
+      anag: { nome: 'Adele Marchetti', giocatore: 'Giulia', professione: 'Giornalista', eta: '31', sesso: 'F', residenza: 'Arkham, MA', nascita: 'Boston, MA' },
+      override: {},
+      imp: { spesaFortuna: true, unitaRavvicinata: 'piedi', dadiFisici: false },
+      conf: { livello: 'NORMALE', valore: '' }, fortunaRecupero: '',
+      nuovaSpec: { radice: 'Arti e Mestieri', spec: '' }, nuovaAb: { nome: '', base: '' },
+      car: { FOR: 50, COS: 60, TAG: 55, DES: 65, FAS: 70, INT: 75, POT: 60, IST: 80 },
+      pf: 8, pm: 12, san: 54, sanInizioGiornata: 60, fortuna: 48,
+      cond: { feritaGrave: false, privoDiSensi: false, morente: false, morto: false, folliaTemporanea: false, folliaIndefinita: false, folliaPermanente: false },
+      skills: skills,
+      armi: [
+        { nome: 'Revolver .38', ab: 'Armi da Fuoco (Pistola)', danno: '1D10', tipo: 'trafigge', bdMode: 'nessuno', gittata: '15 m', attacchi: '1 (fino a 3)', caricatore: 6, munizioni: 4, malf: 100, inceppata: false, ultimo: '' },
+        { nome: 'Senza armi', ab: ETICHETTA_MISCHIA + ' (Rissa)', danno: '1D3+BD', tipo: 'contundente', bdMode: 'completo', gittata: 'contatto', attacchi: '1', caricatore: 0, munizioni: 0, malf: 101, inceppata: false, ultimo: '' }
+      ],
+      armaAttiva: 0, armaPronta: false, strAvversario: '1', ravvicinata: false, colpi: 1,
+      equip: ['Taccuino', 'Matite', 'Macchina fotografica', 'Torcia elettrica', '12 colpi di scorta'],
+      nuovoOggetto: '', denaro: { contanti: '70' + ' $', proprieta: '1.750' + ' $' },
+      nuova: { nome: '', danno: '1D6', gittata: 'contatto', caricatore: '0', malf: '100', ab: ETICHETTA_MISCHIA + ' (Rissa)', tipo: 'contundente', bdMode: 'completo' },
+      ricerca: '', soloAllenate: false,
+      tiri: [], registro: [], undo: [],
+      note: '', sviluppoEsiti: [], sviluppoRiepilogo: '',
+      trascorsi: {
+        descrizione: 'Capelli scuri raccolti in fretta, cappotto grigio con le tasche sfondate dai rullini.',
+        ideologia: 'Ogni fatto si può documentare.',
+        persone: 'Il fratello Tommaso, tipografo al porto.',
+        luoghi: 'La redazione del giornale, di notte.',
+        oggetti: 'La macchina fotografica regalata dal padre.',
+        tratti: 'Testarda, prende appunti su tutto.',
+        ferite: '', fobie: '', tomi: '', entita: ''
+      },
+      compagni: [{ personaggio: 'Dr. Elias Crane', giocatore: 'Marco' }],
+      investigatori: [
+        { id: 'i1', nome: 'Adele Marchetti', nota: 'Giornalista · Arkham · giocatrice Giulia', attiva: true },
+        { id: 'i2', nome: 'Dr. Elias Crane', nota: 'Medico · giocatore Marco', attiva: false }
+      ],
+      erroreImport: false,
+      modale: null, modaleBersaglio: null, modaleValore: '', modaleEsito: '', modaleDettaglio: '', modaleSeguito: ''
+    };
+  }
+  // ── derivati ────────────────────────────────────────────────
+  d() {
+    const c = this.state.car;
+    const somma = c.FOR + c.TAG;
+    let bd = '0', str = 0;
+    if (somma <= 64) { bd = '-2'; str = -2; }
+    else if (somma <= 84) { bd = '-1'; str = -1; }
+    else if (somma <= 124) { bd = '0'; str = 0; }
+    else if (somma <= 164) { bd = '1D4'; str = 1; }
+    else if (somma <= 204) { bd = '1D6'; str = 2; }
+    else if (somma <= 284) { bd = '2D6'; str = 3; }
+    else { bd = '3D6'; str = 4; }
+    let mov = 8;
+    if (c.DES < c.TAG && c.FOR < c.TAG) mov = 7;
+    else if (c.DES > c.TAG && c.FOR > c.TAG) mov = 9;
+    const eta = parseInt(this.state.anag.eta, 10) || 0;
+    if (eta >= 80) mov -= 5; else if (eta >= 70) mov -= 4; else if (eta >= 60) mov -= 3; else if (eta >= 50) mov -= 2; else if (eta >= 40) mov -= 1;
+    const miti = (this.state.skills.find(function (s) { return s.nome === 'Miti di Cthulhu'; }) || { v: 0 }).v;
+    const ov = this.state.override || {};
+    const usa = function (k, calc) { return ov[k] != null && ov[k] !== '' ? (isNaN(parseInt(ov[k], 10)) ? ov[k] : parseInt(ov[k], 10)) : calc; };
+    return {
+      pfMax: usa('pfMax', Math.floor((c.TAG + c.COS) / 10)), pmMax: usa('pmMax', Math.floor(c.POT / 5)),
+      sanMax: usa('sanMax', 99 - miti), bd: usa('bd', bd), struttura: usa('struttura', str),
+      mov: usa('mov', mov), schivare: usa('schivare', Math.floor(c.DES / 2)),
+      calc: { pfMax: Math.floor((c.TAG + c.COS) / 10), pmMax: Math.floor(c.POT / 5), sanMax: 99 - miti, bd: bd, struttura: str, mov: mov, schivare: Math.floor(c.DES / 2) },
+      bdObj: { full: bd, half: bd === '1D4' ? '1D2' : bd === '1D6' ? '1D3' : bd === '2D6' ? '1D6' : bd }
+    };
+  }
+  log(titolo, dettaglio) {
+    const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    this.setState(function (s) { return { registro: [{ ora: ora, titolo: titolo, dettaglio: dettaglio }].concat(s.registro).slice(0, 60) }; });
+  }
+  snap() {
+    const s = this.state;
+    const copia = { pf: s.pf, pm: s.pm, san: s.san, fortuna: s.fortuna, cond: Object.assign({}, s.cond), skills: s.skills.map(function (x) { return Object.assign({}, x); }), armi: s.armi.map(function (x) { return Object.assign({}, x); }) };
+    this.setState(function (st) { return { undo: [copia].concat(st.undo).slice(0, 20) }; });
+  }
+  annullaUltima() {
+    const u = this.state.undo[0];
+    if (!u) return;
+    this.setState({ pf: u.pf, pm: u.pm, san: u.san, fortuna: u.fortuna, cond: u.cond, skills: u.skills, armi: u.armi, undo: this.state.undo.slice(1) });
+    this.log('Annullata l\'ultima azione', 'ripristinati PF ' + u.pf + ' · SAN ' + u.san + ' · Fortuna ' + u.fortuna);
+  }
+
+  // ── motore dei tiri ─────────────────────────────────────────
+  esegui(t, forzato) {
+    const dadi = t.dadi, n = Math.abs(dadi) + 1;
+    const unita = rnd(10) % 10;
+    const decine = [];
+    for (let i = 0; i < n; i++) decine.push((rnd(10) % 10) * 10);
+    const valori = decine.map(function (d) { return (d === 0 && unita === 0) ? 100 : d + unita; });
+    let scelto = valori[0];
+    if (dadi > 0) scelto = Math.min.apply(null, valori);
+    if (dadi < 0) scelto = Math.max.apply(null, valori);
+    return this.valuta(t, scelto, decine, unita, valori, forzato);
+  }
+  valuta(t, roll, decine, unita, valori, forzato) {
+    const v = t.valore;
+    const obiettivo = t.diff === 'estremo' ? Math.floor(v / 5) : t.diff === 'arduo' ? Math.floor(v / 2) : v;
+    let livello;
+    if (roll === 1) livello = 'CRITICO';
+    else if (roll <= Math.floor(v / 5)) livello = 'ESTREMO';
+    else if (roll <= Math.floor(v / 2)) livello = 'ARDUO';
+    else if (roll <= v) livello = 'NORMALE';
+    else livello = 'FALLIMENTO';
+    // Soglia Disastro calcolata sull'obiettivo della difficoltà richiesta, non sul valore pieno.
+    const disastro = roll === 100 || (roll >= 96 && obiettivo < 50);
+    if (disastro && roll > obiettivo) livello = 'DISASTRO';
+    const riuscito = roll <= obiettivo || roll === 1;
+    return Object.assign({}, t, {
+      decine: decine, unita: unita, valori: valori, valore_tiro: roll, obiettivo: obiettivo,
+      livello: livello, riuscito: riuscito, forzato: !!forzato, haEsito: true
+    });
+  }
+  apriTiro(t) {
+    const base = Object.assign({ diff: 'normale', dadi: 0, fisico: !!this.state.imp.dadiFisici, inserito: '', unitaIns: '', decineIns: '', haEsito: false, tipo: 'abilita' }, t);
+    this.setState(function (s) { return { tiri: [base].concat(s.tiri).slice(0, 3) }; });
+  }
+  aggiornaTiro(patch) {
+    this.setState(function (s) {
+      const t = s.tiri.slice();
+      if (!t[0]) return {};
+      t[0] = Object.assign({}, t[0], patch);
+      return { tiri: t };
+    });
+  }
+  lancia() {
+    const t = this.state.tiri[0]; if (!t) return;
+    const r = this.esegui(t, false);
+    this.applicaEsito(r);
+  }
+  applicaEsito(r) {
+    const self = this;
+    this.setState(function (s) { const t = s.tiri.slice(); t[0] = r; return { tiri: t }; });
+    this.log('Tiro · ' + r.nome, r.valore_tiro + ' su ' + r.obiettivo + ' · ' + r.livello + (r.dadi ? ' · dadi ' + (r.dadi > 0 ? '+' : '') + r.dadi : '') + (r.forzato ? ' · forzato' : ''));
+    if (r.riuscito && r.tipo === 'abilita' && r.skill && !r.senzaSpunta) {
+      this.setState(function (s) {
+        return { skills: s.skills.map(function (x) { return (x.nome === r.skill && !x.nonSpuntabile) ? Object.assign({}, x, { spunta: true }) : x; }) };
+      });
+    }
+    // Tiri conseguenti: COS dopo la Ferita Grave, COS da Morente, INT dopo una perdita ≥5.
+    if (r.conseguenza) {
+      const scatta = r.alSuccesso ? r.riuscito : !r.riuscito;
+      if (scatta) {
+        this.setState(function (s) { const c = Object.assign({}, s.cond); c[r.conseguenza] = true; return { cond: c }; });
+        const nomi = { privoDiSensi: 'Privo di sensi', morto: 'Morto', folliaTemporanea: 'Follia Temporanea' };
+        this.log('Conseguenza', nomi[r.conseguenza] + ' · da ' + r.nome);
+      } else if (r.conseguenza === 'folliaTemporanea') {
+        this.log('Nessuna follia', 'il tiro INT è fallito: quello che ho visto non l\'ho capito');
+      }
+    }
+    if (r.tipo === 'attacco' && r.armaIdx != null) {
+      const a = this.state.armi[r.armaIdx];
+      if (a && a.malf <= 100 && r.valore_tiro >= a.malf) {
+        this.setState(function (s) { const w = s.armi.slice(); w[r.armaIdx] = Object.assign({}, w[r.armaIdx], { inceppata: true }); return { armi: w }; });
+        self.log('Arma inceppata', a.nome + ' · tiro ' + r.valore_tiro + ' ≥ ' + a.malf);
+      }
+    }
+  }
+
+  cura(n, motivo, sveglia) {
+    const d = this.d(); this.snap();
+    const s = this.state;
+    const pf = Math.min(d.pfMax, s.pf + n);
+    const cond = Object.assign({}, s.cond);
+    let dett = motivo + ' · PF ' + s.pf + ' → ' + pf;
+    if (sveglia && cond.privoDiSensi) { cond.privoDiSensi = false; dett += ' · ripreso i sensi'; }
+    if (cond.feritaGrave && pf >= Math.ceil(d.pfMax / 2)) { cond.feritaGrave = false; cond.morente = false; dett += ' · Ferita Grave rimarginata'; }
+    this.setState({ pf: pf, cond: cond, modaleEsito: '+' + n + ' PF', modaleDettaglio: dett });
+    this.log('Cure', dett);
+  }
+
+  // ── azioni risorse ──────────────────────────────────────────
+  delta(campo, n) {
+    const d = this.d(); this.snap();
+    const self = this;
+    this.setState(function (s) {
+      let v = s[campo] + n;
+      const max = campo === 'pf' ? d.pfMax : campo === 'pm' ? d.pmMax : campo === 'san' ? d.sanMax : 99;
+      v = Math.max(0, Math.min(max, v));
+      const patch = {}; patch[campo] = v;
+      return patch;
+    });
+    this.log(campo.toUpperCase() + (n > 0 ? ' +' : ' ') + n, 'aggiornata a mano');
+  }
+
+  render_stati() {
+    const c = this.state.cond;
+    const etichette = [['feritaGrave', 'Ferita Grave', ROSSO], ['privoDiSensi', 'Privo di sensi', ROSSO], ['morente', 'Morente', ROSSO], ['morto', 'Morto', ROSSO], ['folliaTemporanea', 'Follia Temporanea', AMBRA], ['folliaIndefinita', 'Follia Indefinita', AMBRA], ['folliaPermanente', 'Follia Permanente', AMBRA]];
+    return etichette.map(function (e) { return { k: e[0], nome: e[1], colore: e[2], on: c[e[0]] }; });
+  }
+
+  renderVals() {
+    const self = this, s = this.state, d = this.d();
+    const gioco = s.mode === 'gioco';
+    // caratteristiche
+    const cars = Object.keys(s.car).map(function (k) {
+      const v = s.car[k];
+      return {
+        k: k, v: v, hq: meta(v), gioco: gioco, modifica: !gioco,
+        tira: function () { self.apriTiro({ nome: k, valore: v, hq: meta(v), tipo: 'caratteristica' }); },
+        onCambia: function (e) {
+          const n = Math.max(0, Math.min(99, parseInt(e.target.value, 10) || 0));
+          self.setState(function (st) { const c = Object.assign({}, st.car); c[k] = n; return { car: c }; });
+        }
+      };
+    });
+
+    // Valori derivati: calcolati, sovrascrivibili, con pastiglia quando l'override è attivo.
+    const ov = s.override || {};
+    const derivati = [['bd', 'BD', d.bd], ['struttura', 'STR', d.struttura], ['schivare', 'SCHIVARE', d.schivare], ['mov', 'MOV', d.mov], ['pfMax', 'PF MAX', d.pfMax], ['pmMax', 'PM MAX', d.pmMax], ['sanMax', 'SAN MAX', d.sanMax]].map(function (r) {
+      const chiave = r[0], sovrascritto = ov[chiave] != null && ov[chiave] !== '';
+      return {
+        k: r[1], v: r[2] === '0' || r[2] === 0 ? (chiave === 'bd' ? '—' : 0) : r[2],
+        gioco: gioco, modifica: !gioco, sovrascritto: sovrascritto,
+        calcolato: '· calcolato ' + (d.calc[chiave] === '0' ? '—' : d.calc[chiave]),
+        bordo: sovrascritto ? '#c8a465' : '#3a4148',
+        cursore: chiave === 'schivare' ? 'pointer' : 'default',
+        tira: function () {
+          if (chiave !== 'schivare') return;
+          self.apriTiro({ nome: 'Schivare', valore: d.schivare, hq: meta(d.schivare), tipo: 'abilita', skill: 'Schivare' });
+        },
+        onCambia: function (e) {
+          const val = e.target.value;
+          self.setState(function (st) { const o = Object.assign({}, st.override); if (val === '') delete o[chiave]; else o[chiave] = val; return { override: o }; });
+        },
+        ripristina: function () {
+          self.setState(function (st) { const o = Object.assign({}, st.override); delete o[chiave]; return { override: o }; });
+          self.log('Override rimosso', r[1] + ' torna al calcolo: ' + d.calc[chiave]);
+        }
+      };
+    });
+
+    // condizioni
+    const attive = this.render_stati().filter(function (x) { return x.on; });
+
+    // tabs
+    const elenco = [['abilita', 'Abilità'], ['combattimento', 'Combattimento'], ['inventario', 'Inventario'], ['trascorsi', 'Trascorsi'], ['registro', 'Registro'], ['sviluppo', 'Fine scenario']];
+    const tabs = elenco.map(function (t) {
+      const on = s.tab === t[0];
+      return { nome: t[1], bordo: on ? AMBRA : 'transparent', colore: on ? LUCE : GRIGIO, vai: function () { self.setState({ tab: t[0] }); } };
+    });
+    const barra = [['stato', 'Stato'], ['abilita', 'Abilità'], ['combattimento', 'Armi'], ['trascorsi', 'Trascorsi'], ['investigatori', 'Schede']].map(function (t) {
+      const on = s.tab === t[0];
+      return { nome: t[1], bordo: on ? AMBRA : 'transparent', colore: on ? LUCE : GRIGIO, vai: function () { self.setState({ tab: t[0] }); } };
+    });
+
+    // abilità
+    const q = s.ricerca.trim().toLowerCase();
+    let lista = s.skills.filter(function (x) {
+      if (q && x.nome.toLowerCase().indexOf(q) === -1) return false;
+      if (s.soloAllenate && x.v <= x.base) return false;
+      return true;
+    });
+    lista = lista.slice().sort(function (a, b) {
+      if (a.preferita !== b.preferita) return a.preferita ? -1 : 1;
+      return a.nome.localeCompare(b.nome);
+    });
+    const abilita = lista.map(function (x) {
+      return {
+        nome: x.nome, v: x.v, hq: meta(x.v),
+        nota: x.v > x.base ? 'allenata · base ' + x.base : 'base ' + x.base,
+        stellaColore: x.preferita ? AMBRA : '#2c3238',
+        spuntaBordo: x.nonSpuntabile ? '#252b30' : (x.spunta ? FISS : '#3a4148'),
+        spuntaColore: x.spunta ? FISS : 'transparent',
+        spuntaSegno: x.nonSpuntabile ? '' : '✓',
+        gioco: gioco, modifica: !gioco,
+        onCambia: function (e) {
+          const n = Math.max(0, Math.min(99, parseInt(e.target.value, 10) || 0));
+          self.setState(function (st) { return { skills: st.skills.map(function (y) { return y.nome === x.nome ? Object.assign({}, y, { v: n }) : y; }) }; });
+        },
+        tira: function () { self.apriTiro({ nome: x.nome, valore: x.v, hq: meta(x.v), tipo: 'abilita', skill: x.nome }); },
+        preferita: function () {
+          self.setState(function (st) { return { skills: st.skills.map(function (y) { return y.nome === x.nome ? Object.assign({}, y, { preferita: !y.preferita }) : y; }) }; });
+        },
+        spunta: function () {
+          if (x.nonSpuntabile || gioco === false && false) return;
+          self.setState(function (st) { return { skills: st.skills.map(function (y) { return y.nome === x.nome ? Object.assign({}, y, { spunta: !y.spunta }) : y; }) }; });
+        }
+      };
+    });
+
+    // armi
+    const armi = s.armi.map(function (a, idx) {
+      const colpi = [];
+      for (let i = 0; i < a.caricatore; i++) colpi.push({ colore: i < a.munizioni ? '#c8a465' : '#12161a' });
+      const ab = s.skills.find(function (x) { return x.nome === a.ab; }) || { v: 25 };
+      return {
+        nome: a.nome, inceppata: a.inceppata, haMunizioni: a.caricatore > 0, colpi: colpi, ultimoDanno: a.ultimo,
+        inUso: s.armaAttiva === idx, nonInUso: s.armaAttiva !== idx,
+        usa: function () { self.setState({ armaAttiva: idx }); self.log('Arma impugnata', a.nome); },
+        riga: a.ab.replace(/^.*\(|\)$/g, '') + ' ' + ab.v + ' · ' + a.danno + ' · ' + a.tipo + ' · ' + a.gittata + ' · ' + a.attacchi,
+        attacca: function () {
+          if (a.caricatore > 0 && a.munizioni <= 0) { self.log('Colpi esauriti', a.nome); return; }
+          self.snap();
+          const raffica = a.caricatore > 0 ? s.colpi : 1;
+          if (a.caricatore > 0) self.setState(function (st) { const ww = st.armi.slice(); ww[idx] = Object.assign({}, ww[idx], { munizioni: Math.max(0, ww[idx].munizioni - 1) }); return { armi: ww }; });
+          // Dadi di partenza: −1 per la raffica (2–3 colpi), +1 a gittata ravvicinata.
+          const dadi = Math.max(-2, Math.min(2, (raffica > 1 ? -1 : 0) + (s.ravvicinata ? 1 : 0)));
+          self.apriTiro({ nome: a.nome + ' — attacco', valore: ab.v, hq: meta(ab.v), tipo: 'attacco', armaIdx: idx, skill: a.ab, dadi: dadi });
+        },
+        danno: function () {
+          const r = tira(a.danno, a.bdMode === 'metà' ? { full: d.bdObj.half, half: d.bdObj.half } : a.bdMode === 'nessuno' ? { full: '0', half: '0' } : d.bdObj);
+          self.snap();
+          self.setState(function (st) { const ww = st.armi.slice(); ww[idx] = Object.assign({}, ww[idx], { ultimo: 'Danno ' + r.tot + '  (' + a.danno + ' → ' + r.det + ')' }); return { armi: ww }; });
+          self.log('Danno · ' + a.nome, a.danno + ' → ' + r.tot);
+        },
+        dannoEstremo: function () {
+          const bdUso = a.bdMode === 'metà' ? { full: d.bdObj.half, half: d.bdObj.half } : a.bdMode === 'nessuno' ? { full: '0', half: '0' } : d.bdObj;
+          let tot = massimo(a.danno, bdUso), nota = 'massimo';
+          if (a.tipo === 'trafigge') { const extra = tira(a.danno, bdUso); tot += extra.tot; nota = 'massimo + ' + extra.tot; }
+          self.setState(function (st) { const ww = st.armi.slice(); ww[idx] = Object.assign({}, ww[idx], { ultimo: 'Danno estremo ' + tot + '  (' + nota + ')' }); return { armi: ww }; });
+          self.log('Danno estremo · ' + a.nome, nota + ' → ' + tot);
+        },
+        ricarica: function () {
+          self.snap();
+          self.setState(function (st) { const ww = st.armi.slice(); ww[idx] = Object.assign({}, ww[idx], { munizioni: ww[idx].caricatore, inceppata: false }); return { armi: ww }; });
+          self.log('Ricaricata', a.nome);
+        }
+      };
+    });
+    const strA = parseInt(s.strAvversario || '0', 10) || 0;
+    const diffStr = strA - d.struttura;
+    const manovraEsito = diffStr <= 0 ? 'nessuna penalità' : diffStr >= 3 ? 'manovra inefficace' : diffStr + ' dado penalità';
+
+    // tiri
+    const tiri = s.tiri.map(function (t, i) {
+      const attivo = i === 0;
+      const difficolta = [['normale', 'Normale'], ['arduo', 'Arduo'], ['estremo', 'Estremo']].map(function (dd) {
+        const on = t.diff === dd[0];
+        return { nome: dd[1], bordo: on ? AMBRA : 'transparent', colore: on ? LUCE : GRIGIO, scegli: function () { self.aggiornaTiro({ diff: dd[0], haEsito: false }); } };
+      });
+      const dadi = [-2, -1, 0, 1, 2].map(function (n) {
+        const on = t.dadi === n;
+        return { nome: n > 0 ? '+' + n : String(n), bordo: on ? AMBRA : 'transparent', colore: on ? LUCE : '#949ca3', scegli: function () { self.aggiornaTiro({ dadi: n, haEsito: false }); } };
+      });
+      const decine = (t.decine || []).map(function (v, k) {
+        const val = t.valori ? t.valori[k] : v;
+        const scelto = val === t.valore_tiro;
+        return { v: v === 0 ? '00' : String(v), colore: scelto ? AMBRA : '#6c747b' };
+      });
+      const colore = t.livello === 'CRITICO' ? FISS : t.livello === 'ESTREMO' ? FISS : t.livello === 'ARDUO' ? AMBRA : t.livello === 'NORMALE' ? '#d9d4c8' : t.livello === 'DISASTRO' ? ROSSO : '#939ba2';
+      let avviso = '';
+      if (t.livello === 'DISASTRO') avviso = 'Disastro. Non basta fallire: qualcosa peggiora. Il Custode decide cosa.';
+      if (t.forzato && !t.riuscito) avviso = 'Tiro forzato e fallito. Le conseguenze concordate col Custode si applicano adesso.';
+      const azioni = [];
+      if (t.haEsito) {
+        const forzabile = !t.riuscito && !t.forzato && (t.tipo === 'abilita' || t.tipo === 'caratteristica');
+        if (forzabile) azioni.push({
+          nome: 'Forza il tiro', bordo: AMBRA, colore: LUCE, cursore: 'pointer',
+          fai: function () { self.setState({ modale: 'forza' }); }
+        });
+        if (!t.riuscito && !forzabile) {
+          const perche = t.forzato ? 'Si forza una volta sola.'
+            : t.tipo === 'attacco' ? 'I tiri di combattimento non si forzano.'
+            : t.tipo === 'sanita' ? 'I tiri Sanità non si forzano.'
+            : t.tipo === 'fortuna' ? 'I tiri Fortuna non si forzano.' : 'Questo tiro non si forza.';
+          azioni.push({ nome: 'Forza il tiro — ' + perche, bordo: '#2c3238', colore: '#949ca3', cursore: 'default', fai: function () { } });
+        }
+        const costo = t.valore_tiro - t.obiettivo;
+        // Perché la spesa di Fortuna non è ammessa: una riga per caso, §5.6.
+        let motivo = '';
+        if (!s.imp.spesaFortuna) motivo = 'La spesa di Fortuna è disattivata nelle impostazioni.';
+        else if (t.riuscito) motivo = 'Il tiro è già riuscito: non c\'è niente da comprare.';
+        else if (t.livello === 'DISASTRO') motivo = 'Su un Disastro la Fortuna non si spende: il tiro è già andato oltre il fallimento.';
+        else if (t.tipo === 'sanita' || t.perdita) motivo = 'Sui tiri Sanità e sulla perdita di SAN la Fortuna non si spende: la lucidità non si compra.';
+        else if (t.tipo === 'fortuna') motivo = 'Non si spende Fortuna per superare un tiro Fortuna.';
+        else if (t.tipo === 'danno') motivo = 'I tiri di danno non si comprano con la Fortuna.';
+        else if (t.forzato) motivo = 'Il tiro è già stato forzato: la Fortuna non interviene due volte.';
+        else if (t.tipo === 'attacco') motivo = 'Sui tiri di combattimento la Fortuna non si spende.';
+        else if (costo > s.fortuna) motivo = 'Servono ' + costo + ' punti e ne ho ' + s.fortuna + '.';
+        const spendibile = !motivo && costo > 0;
+        if (motivo) azioni.push({ nome: 'Spendi Fortuna — ' + motivo, bordo: '#2c3238', colore: '#949ca3', cursore: 'default', fai: function () { } });
+        if (spendibile) azioni.push({
+          nome: 'Spendi Fortuna (' + costo + ')', bordo: FISS, colore: '#9fbdaf', cursore: 'pointer',
+          fai: function () {
+            self.snap();
+            self.setState(function (st) {
+              const tt = st.tiri.slice();
+              tt[0] = Object.assign({}, tt[0], { riuscito: true, livello: 'NORMALE', senzaSpunta: true });
+              return { fortuna: st.fortuna - costo, tiri: tt };
+            });
+            self.log('Fortuna spesa', costo + ' punti · ' + t.nome + ' diventa successo, senza spunta');
+          }
+        });
+        azioni.push({
+          nome: 'Confronto rapido con l\'avversario', bordo: '#3a4148', colore: SOFT, cursore: 'pointer',
+          fai: function () { self.setState({ modale: 'confronto' }); }
+        });
+      }
+      return {
+        nome: t.nome, hq: t.hq, attivo: attivo, opacita: attivo ? '1' : '0.45',
+        difficolta: difficolta, dadi: dadi,
+        fisico: !!t.fisico, inserito: t.inserito || '',
+        unitaIns: t.unitaIns || '', decineIns: t.decineIns || '',
+        onUnitaIns: function (e) { self.aggiornaTiro({ unitaIns: e.target.value }); },
+        onDecineIns: function (e) { self.aggiornaTiro({ decineIns: e.target.value }); },
+        confermaDadi: function () {
+          // Dadi reali §5.8: un'unità e da una a tre decine, poi la regola del 100 e la scelta min/max.
+          const u = parseInt(t.unitaIns, 10);
+          if (isNaN(u) || u < 0 || u > 9) return;
+          const dec = String(t.decineIns || '').split(/[^0-9]+/).filter(Boolean).slice(0, 3).map(function (x) {
+            const k = parseInt(x, 10); return (k >= 10 ? k : k * 10) % 100;
+          });
+          if (!dec.length) return;
+          const valori = dec.map(function (dd) { return (dd === 0 && u === 0) ? 100 : dd + u; });
+          let scelto = valori[0];
+          if (t.dadi > 0) scelto = Math.min.apply(null, valori);
+          if (t.dadi < 0) scelto = Math.max.apply(null, valori);
+          self.applicaEsito(self.valuta(t, scelto, dec, u, valori, false));
+        },
+        fisicoBordo: t.fisico ? AMBRA : '#3a4148', fisicoColore: t.fisico ? LUCE : SOFT,
+        haEsito: !!t.haEsito, decine: decine, unita: t.unita, valore: t.valore_tiro,
+        livello: t.livello, livelloColore: colore,
+        riga: t.haEsito ? 'obiettivo ' + t.obiettivo + ' · valore ' + t.valore + (t.forzato ? ' · forzato' : '') : '',
+        avviso: avviso, azioni: azioni,
+        tiraVirtuale: function () { self.lancia(); },
+        modoFisico: function () { self.aggiornaTiro({ fisico: !t.fisico }); },
+        onInserito: function (e) { self.aggiornaTiro({ inserito: e.target.value }); },
+        confermaFisico: function () {
+          const n = parseInt(t.inserito, 10);
+          if (!n || n < 1 || n > 100) return;
+          self.applicaEsito(self.valuta(t, n, [Math.floor(n / 10) * 10], n % 10, [n], false));
+        }
+      };
+    });
+
+    // sviluppo
+    const spuntate = s.skills.filter(function (x) { return x.spunta; });
+    const sviluppo = s.sviluppoEsiti.length ? s.sviluppoEsiti : spuntate.map(function (x) {
+      return { nome: x.nome, esito: 'in attesa', valore: x.v, colore: '#949ca3' };
+    });
+
+    // registro
+    const registro = s.registro;
+
+    // modali
+    // Confronto rapido §5.4: prima il livello, poi l'abilità, poi il ritiro.
+    const mio = s.tiri[0];
+    const confAvv = parseInt(s.conf.valore, 10);
+    let confEsito = '';
+    if (!mio || !mio.haEsito) confEsito = 'Prima serve un tiro mio: apro un\'abilità e tiro.';
+    else {
+      const a = ORDINE.indexOf(mio.livello), b = ORDINE.indexOf(s.conf.livello);
+      if (a > b) confEsito = 'Vinco io: ' + mio.livello + ' batte ' + s.conf.livello + '.';
+      else if (a < b) confEsito = 'Vince l\'avversario: ' + s.conf.livello + ' batte ' + mio.livello + '.';
+      else if (isNaN(confAvv)) confEsito = 'Pari livello. Serve l\'abilità dell\'avversario per decidere.';
+      else if (mio.valore > confAvv) confEsito = 'Pari livello, ma la mia abilità è più alta (' + mio.valore + ' contro ' + confAvv + '): vinco io.';
+      else if (mio.valore < confAvv) confEsito = 'Pari livello e abilità più bassa (' + mio.valore + ' contro ' + confAvv + '): vince l\'avversario.';
+      else confEsito = 'Pari in tutto. Ritiriamo entrambi: vince il risultato più basso.';
+    }
+
+    let modaleTitolo = '', modaleTesto = '', modaleInput = false, modalePlaceholder = '', modaleAzioni = [], modaleStati = false, modaleAbilita = false, modaleConfronto = false, modaleImp = false;
+    const chiudi = { nome: 'Chiudi', bordo: '#3a4148', colore: SOFT, fai: function () { self.setState({ modale: null, modaleValore: '', modaleEsito: '', modaleDettaglio: '' }); } };
+    if (s.modale === 'danno') {
+      modaleTitolo = 'Quanto mi ha preso';
+      modaleInput = true; modalePlaceholder = 'punti di danno';
+      modaleAzioni = [{
+        nome: 'Applica', bordo: ROSSO, colore: '#e08076', fai: function () {
+          const n = parseInt(s.modaleValore, 10); if (!n) return;
+          self.snap();
+          const pf = Math.max(0, s.pf - n);
+          const cond = Object.assign({}, s.cond);
+          let dett = 'PF ' + s.pf + ' → ' + pf;
+          if (n >= d.pfMax) { cond.morto = true; dett += ' · Morto'; }
+          else if (n * 2 >= d.pfMax) { cond.feritaGrave = true; dett += ' · Ferita Grave, serve un tiro COS'; }
+          if (pf === 0 && cond.feritaGrave && !cond.morto) { cond.morente = true; dett += ' · Morente'; }
+          else if (pf === 0 && !cond.morto) { cond.privoDiSensi = true; dett += ' · Privo di sensi'; }
+          const chiedeCos = cond.feritaGrave && !cond.morto && pf > 0;
+          self.setState({ pf: pf, cond: cond, modaleEsito: String(n) + ' danni', modaleDettaglio: dett, modaleSeguito: chiedeCos ? 'cos' : (cond.morente ? 'morente' : '') });
+          self.log('Danno applicato', dett);
+        }
+      }];
+      if (s.modaleSeguito === 'cos') modaleAzioni.push({
+        nome: 'Tira COS per restare in piedi', bordo: AMBRA, colore: LUCE, fai: function () {
+          self.setState({ modale: null, modaleSeguito: '' });
+          self.apriTiro({ nome: 'COS — resistere alla Ferita Grave', valore: s.car.COS, hq: meta(s.car.COS), tipo: 'caratteristica', conseguenza: 'privoDiSensi' });
+        }
+      });
+      if (s.modaleSeguito === 'morente') modaleAzioni.push({
+        nome: 'Tira COS di fine round', bordo: ROSSO, colore: '#e08076', fai: function () {
+          self.setState({ modale: null, modaleSeguito: '' });
+          self.apriTiro({ nome: 'COS — fine round da Morente', valore: s.car.COS, hq: meta(s.car.COS), tipo: 'caratteristica', conseguenza: 'morto' });
+        }
+      });
+      modaleAzioni.push({ nome: 'Annulla il danno', bordo: '#3a4148', colore: SOFT, fai: function () { self.annullaUltima(); self.setState({ modale: null, modaleValore: '', modaleEsito: '', modaleSeguito: '' }); } }, chiudi);
+    } else if (s.modale === 'sanita') {
+      modaleTitolo = 'Quello che ho visto';
+      modaleTesto = 'Perdita nel formato successo/fallimento.';
+      modaleInput = true; modalePlaceholder = '0/1D6';
+      modaleAzioni = [{
+        nome: 'Tira', bordo: FISS, colore: '#9fbdaf', fai: function () {
+          const spec = (s.modaleValore || '0/1D6').split('/');
+          const roll = ((rnd(10) % 10) * 10) + (rnd(10) % 10) || 100;
+          const riuscito = roll <= s.san;
+          const disastro = roll === 100 || (roll >= 96 && s.san < 50);
+          const espr = riuscito ? (spec[0] || '0') : (spec[1] || '0');
+          const perdita = disastro ? massimo(espr, d.bdObj) : tira(espr, d.bdObj).tot;
+          self.snap();
+          const san = Math.max(0, s.san - perdita);
+          const persi = s.sanInizioGiornata - san;
+          const cond = Object.assign({}, s.cond);
+          let dett = 'tiro ' + roll + ' su ' + s.san + ' · ' + (riuscito ? 'riuscito' : 'fallito') + ' · −' + perdita;
+          const chiedeInt = perdita >= 5;
+          if (chiedeInt) dett += ' · perdita ≥ 5: serve un tiro INT';
+          if (persi >= Math.floor(s.sanInizioGiornata / 5)) { cond.folliaIndefinita = true; dett += ' · Follia Indefinita'; }
+          if (san === 0) { cond.folliaPermanente = true; dett += ' · Follia Permanente'; }
+          self.setState({ san: san, cond: cond, modaleEsito: roll + ' → −' + perdita, modaleDettaglio: dett, modaleSeguito: chiedeInt ? 'int' : '' });
+          self.log('Tiro Sanità', dett);
+        }
+      }];
+      if (s.modaleSeguito === 'int') modaleAzioni.push({
+        nome: 'Tira INT — se riesce, Follia Temporanea', bordo: AMBRA, colore: LUCE, fai: function () {
+          self.setState({ modale: null, modaleSeguito: '' });
+          self.apriTiro({ nome: 'INT — capire quello che ho visto', valore: s.car.INT, hq: meta(s.car.INT), tipo: 'caratteristica', conseguenza: 'folliaTemporanea', alSuccesso: true });
+        }
+      });
+      modaleAzioni.push(chiudi);
+    } else if (s.modale === 'forza') {
+      modaleTitolo = 'Forzare significa rischiare';
+      modaleTesto = 'Concorda col Custode la giustificazione e la conseguenza di un secondo fallimento. Si forza una volta sola, e il registro se lo ricorda.';
+      modaleAzioni = [{
+        nome: 'Forza', bordo: AMBRA, colore: LUCE, fai: function () {
+          const t = s.tiri[0]; if (!t) return;
+          self.applicaEsito(self.esegui(t, true));
+          self.setState({ modale: null });
+        }
+      }, chiudi];
+    } else if (s.modale === 'cura') {
+      modaleTitolo = 'Rimettersi in sesto';
+      modaleTesto = 'Il Primo Soccorso vale entro un\'ora e può far riprendere i sensi. La Medicina richiede almeno un\'ora. Senza Ferita Grave si recupera 1 PF al giorno; con la Ferita Grave si tira COS a fine settimana.';
+      modaleAzioni = [
+        { nome: 'Primo Soccorso +1', bordo: FISS, colore: '#9fbdaf', fai: function () { self.cura(1, 'Primo Soccorso', true); } },
+        { nome: 'Medicina +1D3', bordo: FISS, colore: '#9fbdaf', fai: function () { self.cura(rnd(3), 'Medicina', false); } },
+        { nome: 'Riposo, +1 al giorno', bordo: '#3a4148', colore: SOFT, fai: function () { self.cura(1, 'Riposo di un giorno', false); } },
+        { nome: 'COS di fine settimana', bordo: AMBRA, colore: LUCE, fai: function () {
+          self.setState({ modale: null });
+          self.apriTiro({ nome: 'COS — fine settimana', valore: s.car.COS, hq: meta(s.car.COS), tipo: 'caratteristica' });
+        } },
+        chiudi
+      ];
+    } else if (s.modale === 'aggiungiAbilita') {
+      modaleTitolo = 'Cosa ho imparato a fare';
+      modaleAbilita = true;
+      modaleAzioni = [chiudi];
+    } else if (s.modale === 'stati') {
+      modaleTitolo = 'Come sto, adesso';
+      modaleStati = true;
+      modaleAzioni = [chiudi];
+    } else if (s.modale === 'eliminaScheda') {
+      const bersaglio = s.investigatori.find(function (x) { return x.id === s.modaleBersaglio; });
+      modaleTitolo = 'Strappo questa pagina?';
+      modaleTesto = bersaglio
+        ? 'La scheda di ' + bersaglio.nome + ' sparisce dall\'elenco, con tutto quello che ci sta scritto. Se il file è stato esportato resta lì, altrimenti non torna.'
+        : 'La scheda non c\'è più.';
+      modaleAzioni = [{
+        nome: 'Elimina', bordo: ROSSO, colore: '#e08076', fai: function () {
+          self.setState(function (st) {
+            const rimasti = st.investigatori.filter(function (x) { return x.id !== st.modaleBersaglio; });
+            if (rimasti.length && !rimasti.some(function (x) { return x.attiva; })) rimasti[0] = Object.assign({}, rimasti[0], { attiva: true });
+            return { investigatori: rimasti, modale: null, modaleBersaglio: null };
+          });
+          self.log('Scheda eliminata', bersaglio ? bersaglio.nome : '—');
+        }
+      }, { nome: 'Lascia stare', bordo: '#3a4148', colore: SOFT, fai: function () { self.setState({ modale: null, modaleBersaglio: null }); } }];
+    } else if (s.modale === 'giornata') {
+      modaleTitolo = 'Una nuova giornata';
+      modaleTesto = 'Segno la Sanità di adesso come punto di partenza. Il conto delle perdite riparte da zero.';
+      modaleAzioni = [{
+        nome: 'Conferma', bordo: AMBRA, colore: LUCE, fai: function () {
+          self.setState({ sanInizioGiornata: s.san, modale: null });
+          self.log('Nuova giornata', 'SAN di partenza ' + s.san);
+        }
+      }, chiudi];
+    } else if (s.modale === 'confronto') {
+      modaleTitolo = 'Chi ha fatto meglio';
+      modaleTesto = 'Vince il livello migliore. A parità di livello vince l\'abilità più alta; se pareggiano anche quelle, si ritira e vince il numero più basso.';
+      modaleConfronto = true;
+      modaleAzioni = [{ nome: 'Segna nel registro', bordo: AMBRA, colore: LUCE, fai: function () { self.log('Confronto rapido', confEsito); } }, chiudi];
+    } else if (s.modale === 'impostazioni') {
+      modaleTitolo = 'Come tengo la scheda';
+      modaleImp = true;
+      modaleAzioni = [chiudi];
+    }
+    const statiTutti = this.render_stati().map(function (x) {
+      return {
+        nome: x.nome, bordo: x.on ? x.colore : '#3a4148', colore: x.on ? x.colore : '#949ca3',
+        togli: function () {
+          self.snap();
+          self.setState(function (st) { const c = Object.assign({}, st.cond); c[x.k] = !c[x.k]; return { cond: c }; });
+          self.log(x.on ? 'Rimosso stato' : 'Attivato stato', x.nome);
+        }
+      };
+    });
+
+    const persiOggi = Math.max(0, s.sanInizioGiornata - s.san);
+    const vdc = (s.skills.find(function (x) { return x.nome === 'Valore di Credito'; }) || { v: 0 }).v;
+    const den = denaro(vdc);
+    const soglia = Math.floor(s.sanInizioGiornata / 5);
+
+    return {
+      tab: s.tab, panelFlag: s.tiri.length ? '1' : '0',
+      modeKicker: gioco ? 'al tavolo' : 'scheda sbloccata — tocca un valore per cambiarlo',
+      modeBtnLabel: gioco ? 'Modifica' : 'Gioco',
+      modeBtnStyle: 'border:1px solid ' + (gioco ? '#3a4148' : AMBRA) + '; color:' + (gioco ? SOFT : LUCE) + '; border-radius:2px; padding:8px 12px; font-size:14px; cursor:pointer; min-height:36px; display:flex; align-items:center;',
+      toggleMode: function () { self.setState({ mode: gioco ? 'modifica' : 'gioco' }); },
+      openStati: function () { self.setState({ modale: 'stati' }); },
+      openImpostazioni: function () { self.setState({ modale: 'impostazioni' }); },
+      vaiInvestigatori: function () { self.setState({ tab: 'investigatori' }); },
+      invBordo: s.tab === 'investigatori' ? AMBRA : '#3a4148',
+      invColore: s.tab === 'investigatori' ? LUCE : SOFT,
+
+      nome: s.anag.nome,
+      sottotitolo: [s.anag.professione, s.anag.eta ? s.anag.eta + ' anni' : '', s.anag.residenza].filter(Boolean).join(' · '),
+      pf: s.pf, pfMax: d.pfMax, san: s.san, sanMax: d.sanMax, pm: s.pm, pmMax: d.pmMax, fortuna: s.fortuna,
+      pfPiu: function () { self.delta('pf', 1); }, pfMeno: function () { self.delta('pf', -1); },
+      sanPiu: function () { self.delta('san', 1); }, sanMeno: function () { self.delta('san', -1); },
+      pmPiu: function () { self.delta('pm', 1); }, pmMeno: function () { self.delta('pm', -1); },
+      fortunaPiu: function () { self.delta('fortuna', 1); }, fortunaMeno: function () { self.delta('fortuna', -1); },
+      tiraFortuna: function () { self.apriTiro({ nome: 'Tiro Fortuna', valore: s.fortuna, hq: meta(s.fortuna), tipo: 'fortuna' }); },
+      openDanno: function () { self.setState({ modale: 'danno', modaleValore: '', modaleEsito: '', modaleSeguito: '' }); },
+      openSanita: function () { self.setState({ modale: 'sanita', modaleValore: '0/1D6', modaleEsito: '', modaleSeguito: '' }); },
+      openCura: function () { self.setState({ modale: 'cura', modaleEsito: '', modaleDettaglio: '' }); },
+      vdc: vdc,
+      denaroLivello: den.livello, denaroSpesa: den.spesa, denaroContanti: den.contanti, denaroBeni: den.beni,
+      denaroSociale: sociale(vdc),
+      contanti: s.denaro.contanti, proprieta: s.denaro.proprieta,
+      onContanti: function (e) { self.setState({ denaro: Object.assign({}, s.denaro, { contanti: e.target.value }) }); },
+      onProprieta: function (e) { self.setState({ denaro: Object.assign({}, s.denaro, { proprieta: e.target.value }) }); },
+      nuovaGiornata: function () { self.setState({ modale: 'giornata' }); },
+      sanFori: (function () {
+        const tot = 30, pieni = Math.round((s.san / d.sanMax) * tot), oggi = Math.round((persiOggi / d.sanMax) * tot);
+        const out = [];
+        for (let i = 0; i < tot; i++) {
+          const perso = i >= pieni, recente = perso && i < pieni + oggi;
+          out.push({ fondo: perso ? '#0d0f11' : '#d6c9ae', bordo: recente ? '#b3453c' : (perso ? '#252b30' : 'transparent') });
+        }
+        return out;
+      })(),
+      persiOggi: persiOggi, sogliaFollia: soglia,
+
+      condizioni: attive, hasCondizioni: attive.length > 0,
+      cars: cars, derivati: derivati,
+      isGioco: gioco, isModifica: !gioco,
+      campiAnag: [['NOME', 'nome'], ['GIOCATORE', 'giocatore'], ['PROFESSIONE', 'professione'], ['ETÀ', 'eta'], ['SESSO', 'sesso'], ['RESIDENZA', 'residenza'], ['NASCITA', 'nascita']].map(function (c) {
+        return {
+          k: c[0], v: s.anag[c[1]],
+          onCambia: function (e) { self.setState({ anag: Object.assign({}, s.anag, (function () { const o = {}; o[c[1]] = e.target.value; return o; })()) }); }
+        };
+      }),
+
+      tabs: tabs, barra: barra,
+      isAbilita: s.tab === 'abilita', isCombattimento: s.tab === 'combattimento', isTrascorsi: s.tab === 'trascorsi',
+      isRegistro: s.tab === 'registro', isSviluppo: s.tab === 'sviluppo', isInvestigatori: s.tab === 'investigatori',
+      isInventario: s.tab === 'inventario',
+
+      inventarioArmi: s.armi.map(function (a, idx) {
+        const ab = s.skills.find(function (x) { return x.nome === a.ab; }) || { v: 25 };
+        const attiva = s.armaAttiva === idx;
+        return {
+          nome: a.nome, colore: attiva ? LUCE : SOFT,
+          riga: a.ab + ' ' + ab.v + ' · ' + a.danno + ' · ' + a.tipo + (a.caricatore ? ' · caricatore ' + a.caricatore + ' · malf. ' + a.malf : ''),
+          dotBordo: attiva ? AMBRA : '#3a4148', dotFondo: attiva ? AMBRA : 'transparent',
+          eliminabile: a.nome !== 'Senza armi',
+          usa: function () { self.setState({ armaAttiva: idx }); self.log('Arma impugnata', a.nome); },
+          elimina: function () {
+            self.setState(function (st) {
+              const ww = st.armi.filter(function (_, i) { return i !== idx; });
+              return { armi: ww, armaAttiva: Math.min(st.armaAttiva, ww.length - 1) };
+            });
+            self.log('Arma rimossa', a.nome);
+          }
+        };
+      }),
+      abilitaArma: ['Combattere (Rissa)', 'Armi da Fuoco (Pistola)'].map(function (n) {
+        const on = s.nuova.ab === n;
+        return { nome: n, bordo: on ? AMBRA : 'transparent', colore: on ? LUCE : GRIGIO, scegli: function () { self.setState({ nuova: Object.assign({}, s.nuova, { ab: n }) }); } };
+      }),
+      tipiArma: ['contundente', 'trafigge'].map(function (n) {
+        const on = s.nuova.tipo === n;
+        return { nome: n, bordo: on ? AMBRA : 'transparent', colore: on ? LUCE : GRIGIO, scegli: function () { self.setState({ nuova: Object.assign({}, s.nuova, { tipo: n }) }); } };
+      }),
+      nuovoNome: s.nuova.nome, nuovoDanno: s.nuova.danno, nuovaGittata: s.nuova.gittata,
+      nuovoCaricatore: s.nuova.caricatore, nuovoMalf: s.nuova.malf,
+      onNuovoNome: function (e) { self.setState({ nuova: Object.assign({}, s.nuova, { nome: e.target.value }) }); },
+      onNuovoDanno: function (e) { self.setState({ nuova: Object.assign({}, s.nuova, { danno: e.target.value }) }); },
+      onNuovaGittata: function (e) { self.setState({ nuova: Object.assign({}, s.nuova, { gittata: e.target.value }) }); },
+      onNuovoCaricatore: function (e) { self.setState({ nuova: Object.assign({}, s.nuova, { caricatore: e.target.value }) }); },
+      onNuovoMalf: function (e) { self.setState({ nuova: Object.assign({}, s.nuova, { malf: e.target.value }) }); },
+      aggiungiArma: function () {
+        const n = s.nuova;
+        if (!n.nome.trim()) return;
+        const car = parseInt(n.caricatore, 10) || 0;
+        const arma = {
+          nome: n.nome.trim(), ab: n.ab, danno: n.danno || '1D6', tipo: n.tipo,
+          bdMode: n.ab.indexOf('Armi da Fuoco') === 0 ? 'nessuno' : 'completo',
+          gittata: n.gittata || 'contatto', attacchi: '1', caricatore: car, munizioni: car,
+          malf: parseInt(n.malf, 10) || 101, inceppata: false, ultimo: ''
+        };
+        self.setState(function (st) {
+          return { armi: st.armi.concat([arma]), armaAttiva: st.armi.length, nuova: Object.assign({}, st.nuova, { nome: '' }) };
+        });
+        self.log('Arma aggiunta', arma.nome + ' · ' + arma.danno);
+      },
+      equip: s.equip.map(function (o, i) {
+        return {
+          nome: o,
+          elimina: function () { self.setState(function (st) { return { equip: st.equip.filter(function (_, k) { return k !== i; }) }; }); }
+        };
+      }),
+      nuovoOggetto: s.nuovoOggetto,
+      onNuovoOggetto: function (e) { self.setState({ nuovoOggetto: e.target.value }); },
+      aggiungiOggetto: function () {
+        const v = s.nuovoOggetto.trim(); if (!v) return;
+        self.setState(function (st) { return { equip: st.equip.concat([v]), nuovoOggetto: '' }; });
+      },
+
+      ricerca: s.ricerca, onRicerca: function (e) { self.setState({ ricerca: e.target.value }); },
+      soloAllenate: s.soloAllenate, toggleAllenate: function () { self.setState({ soloAllenate: !s.soloAllenate }); },
+      allenateBordo: s.soloAllenate ? AMBRA : 'transparent', allenateColore: s.soloAllenate ? LUCE : GRIGIO,
+      abilita: abilita, abilitaVuote: abilita.length === 0,
+
+      armi: armi, iniziativa: s.armaPronta ? s.car.DES + 50 : s.car.DES,
+      ravvicinata: s.ravvicinata,
+      toggleRavvicinata: function () { self.setState({ ravvicinata: !s.ravvicinata }); },
+      ravvicinataBordo: s.ravvicinata ? AMBRA : 'transparent', ravvicinataColore: s.ravvicinata ? LUCE : GRIGIO,
+      ravvicinataDistanza: (function () {
+        // Il calcolo è sempre DES/5 in piedi; l'impostazione cambia solo l'unità mostrata.
+        const piedi = Math.round(s.car.DES / 5);
+        return s.imp.unitaRavvicinata === 'metri'
+          ? (piedi * 0.3048).toFixed(1).replace('.', ',') + ' m'
+          : piedi + ' piedi';
+      })(),
+      colpiScelti: String(s.colpi),
+      opzioniColpi: [1, 2, 3].map(function (n) {
+        const on = s.colpi === n;
+        return { nome: String(n), bordo: on ? AMBRA : 'transparent', colore: on ? LUCE : GRIGIO, scegli: function () { self.setState({ colpi: n }); } };
+      }),
+      notaColpi: s.colpi > 1 ? 'Ogni colpo prende un dado penalità.' : 'Un colpo, nessuna penalità.',
+      armaPronta: s.armaPronta, toggleArmaPronta: function () { self.setState({ armaPronta: !s.armaPronta }); },
+      prontaBordo: s.armaPronta ? AMBRA : 'transparent', prontaColore: s.armaPronta ? LUCE : GRIGIO,
+      strAvversario: s.strAvversario, onStrAvversario: function (e) { self.setState({ strAvversario: e.target.value }); },
+      manovraEsito: manovraEsito,
+
+      trascorsi: [
+        ['descrizione', 'DESCRIZIONE PERSONALE', 'Come mi vedono gli altri'],
+        ['ideologia', 'IDEOLOGIA / CREDO', 'In cosa credo davvero'],
+        ['persone', 'PERSONE IMPORTANTI', 'Chi mi tiene in piedi'],
+        ['luoghi', 'LUOGHI IMPORTANTI', 'Dove torno sempre'],
+        ['oggetti', 'OGGETTI DI VALORE', 'Cosa non lascerei mai'],
+        ['tratti', 'TRATTI', 'Come mi comporto sotto pressione'],
+        ['ferite', 'FERITE E CICATRICI', 'Quello che mi è rimasto addosso'],
+        ['fobie', 'FOBIE E MANIE', 'Quello che non riesco a governare'],
+        ['tomi', 'TOMI ARCANI, INCANTESIMI, MANUFATTI', 'Cosa ho letto che non andava letto'],
+        ['entita', 'INCONTRI CON ENTITÀ STRANE', 'Cosa ho visto e non so spiegare']
+      ].map(function (t) {
+        return {
+          etichetta: t[1], testo: s.trascorsi[t[0]], invito: t[2],
+          onCambia: function (e) { self.setState({ trascorsi: Object.assign({}, s.trascorsi, (function () { const o = {}; o[t[0]] = e.target.value; return o; })()) }); }
+        };
+      }),
+      compagni: s.compagni.map(function (c, i) {
+        const patch = function (campo, val) {
+          self.setState(function (st) { const cc = st.compagni.slice(); cc[i] = Object.assign({}, cc[i]); cc[i][campo] = val; return { compagni: cc }; });
+        };
+        return {
+          personaggio: c.personaggio, giocatore: c.giocatore,
+          onPersonaggio: function (e) { patch('personaggio', e.target.value); },
+          onGiocatore: function (e) { patch('giocatore', e.target.value); },
+          elimina: function () { self.setState(function (st) { return { compagni: st.compagni.filter(function (_, k) { return k !== i; }) }; }); }
+        };
+      }),
+      aggiungiCompagno: function () { self.setState(function (st) { return { compagni: st.compagni.concat([{ personaggio: '', giocatore: '' }]) }; }); },
+      timbraOra: function () {
+        const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+        self.setState(function (st) { return { note: (st.note ? st.note.replace(/\s*$/, '') + '\n\n' : '') + ora + ' — ' }; });
+      },
+      note: s.note, onNote: function (e) { self.setState({ note: e.target.value }); },
+
+      registro: registro, registroVuoto: registro.length === 0,
+      annulla: function () { self.annullaUltima(); },
+      annullaNota: s.undo.length ? s.undo.length + ' passi indietro disponibili' : 'niente da annullare',
+
+      sviluppo: sviluppo, sviluppoVuoto: sviluppo.length === 0, sviluppoRiepilogo: s.sviluppoRiepilogo,
+      fortunaRecupero: s.fortunaRecupero,
+      recuperoFortuna: function () {
+        // Recupero di fine sessione §5.6: 1D100 sopra la Fortuna attuale vale +1D10, massimo 99.
+        const roll = ((rnd(10) % 10) * 10) + (rnd(10) % 10) || 100;
+        if (roll > s.fortuna) {
+          const g = rnd(10);
+          const nf = Math.min(99, s.fortuna + g);
+          self.snap();
+          const riga = 'tiro ' + roll + ' supera ' + s.fortuna + ' · +' + g + ' → Fortuna ' + nf;
+          self.setState({ fortuna: nf, fortunaRecupero: riga });
+          self.log('Recupero Fortuna', riga);
+        } else {
+          const riga = 'tiro ' + roll + ' non supera ' + s.fortuna + ' · nessun guadagno';
+          self.setState({ fortunaRecupero: riga });
+          self.log('Recupero Fortuna', riga);
+        }
+      },
+      eseguiSviluppo: function () {
+        const esiti = []; let sanGuadagnata = 0;
+        const nuove = s.skills.map(function (x) {
+          if (!x.spunta) return x;
+          const roll = ((rnd(10) % 10) * 10) + (rnd(10) % 10) || 100;
+          if (roll > x.v || roll > 95) {
+            const inc = rnd(10);
+            const nv = Math.min(99, x.v + inc);
+            if (x.v < 90 && nv >= 90) sanGuadagnata += rnd(6) + rnd(6);
+            esiti.push({ nome: x.nome, esito: 'tiro ' + roll + ' · +' + inc, valore: nv, colore: FISS });
+            return Object.assign({}, x, { v: nv, spunta: false });
+          }
+          esiti.push({ nome: x.nome, esito: 'tiro ' + roll + ' · nessun aumento', valore: x.v, colore: '#949ca3' });
+          return Object.assign({}, x, { spunta: false });
+        });
+        self.snap();
+        self.setState({
+          skills: nuove, sviluppoEsiti: esiti,
+          san: Math.min(d.sanMax, s.san + sanGuadagnata),
+          sviluppoRiepilogo: esiti.length ? (esiti.length + ' abilità tirate' + (sanGuadagnata ? ' · +' + sanGuadagnata + ' SAN' : '')) : 'nessuna spunta'
+        });
+        self.log('Fase di sviluppo', esiti.length + ' abilità' + (sanGuadagnata ? ' · +' + sanGuadagnata + ' SAN' : ''));
+      },
+
+      investigatori: s.investigatori.map(function (i) {
+        const aperta = i.attiva;
+        return {
+          nome: i.nome, nota: i.nota,
+          iniziali: i.nome.replace(/^Dr\.? /, '').split(' ').map(function (p) { return p[0]; }).join('').slice(0, 2).toUpperCase(),
+          colore: aperta ? LUCE : SOFT, barra: aperta ? AMBRA : 'transparent',
+          stato: aperta ? 'APERTA' : 'SALVATA', statoColore: aperta ? AMBRA : '#8d9299',
+          apri: function () {
+            if (aperta) return;
+            self.setState(function (st) {
+              return { investigatori: st.investigatori.map(function (x) { return Object.assign({}, x, { attiva: x.id === i.id }); }) };
+            });
+            self.log('Scheda aperta', i.nome);
+          },
+          duplica: function () {
+            const copia = Object.assign({}, i, { id: 'i' + Date.now(), nome: i.nome + ' (copia)', attiva: false });
+            self.setState(function (st) { return { investigatori: st.investigatori.concat([copia]) }; });
+            self.log('Scheda duplicata', copia.nome);
+          },
+          elimina: function () { self.setState({ modale: 'eliminaScheda', modaleBersaglio: i.id, modaleValore: '' }); }
+        };
+      }),
+      nessunInvestigatore: s.investigatori.length === 0,
+      haInvestigatori: s.investigatori.length > 0,
+      nuovaScheda: function () {
+        const n = { id: 'i' + Date.now(), nome: 'Investigatore senza nome', nota: 'da compilare in Modalità Modifica', attiva: false };
+        self.setState(function (st) { return { investigatori: st.investigatori.concat([n]), erroreImport: false }; });
+        self.log('Scheda creata', 'vuota, da compilare');
+      },
+      importa: function () {
+        // Nel prototipo l'importazione riesce sempre: il file non valido si dimostra col comando dedicato.
+        const n = { id: 'i' + Date.now(), nome: 'Martha Kowalski', nota: 'Bibliotecaria · importata da file', attiva: false };
+        self.setState(function (st) { return { investigatori: st.investigatori.concat([n]), erroreImport: false }; });
+        self.log('Scheda importata', n.nome + ' · schema versione 1');
+      },
+      esporta: function () {
+        const a = s.investigatori.find(function (x) { return x.attiva; });
+        self.log('Scheda esportata', (a ? a.nome : 'nessuna scheda aperta') + ' · JSON, schema versione 1');
+      },
+      svuota: function () {
+        self.setState(function (st) {
+          return st.investigatori.length
+            ? { investigatori: [], erroreImport: false }
+            : { investigatori: [{ id: 'i1', nome: 'Adele Marchetti', nota: 'Giornalista · Arkham · giocatrice Giulia', attiva: true }, { id: 'i2', nome: 'Dr. Elias Crane', nota: 'Medico · giocatore Marco', attiva: false }] };
+        });
+      },
+      svuotaLabel: s.investigatori.length ? 'Primo avvio, elenco vuoto' : 'Ripristina l\'elenco',
+      fileNonValido: function () { self.setState({ erroreImport: true }); self.log('Importazione rifiutata', 'versione dello schema mancante'); },
+      chiudiErrore: function () { self.setState({ erroreImport: false }); },
+      erroreImport: s.erroreImport,
+
+      pannelloAperto: s.tiri.length > 0, tiri: tiri,
+      chiudiPannello: function () { self.setState({ tiri: [] }); },
+
+      modale: !!s.modale, modaleTitolo: modaleTitolo, modaleTesto: modaleTesto, modaleInput: modaleInput,
+      modalePlaceholder: modalePlaceholder, modaleValore: s.modaleValore,
+      onModaleValore: function (e) { self.setState({ modaleValore: e.target.value }); },
+      modaleEsito: s.modaleEsito, modaleDettaglio: s.modaleDettaglio,
+      modaleAzioni: modaleAzioni, modaleStati: modaleStati, statiTutti: statiTutti, modaleAbilita: modaleAbilita,
+      modaleConfronto: modaleConfronto, modaleImp: modaleImp,
+      confEsito: confEsito, confValore: s.conf.valore,
+      onConfValore: function (e) { self.setState({ conf: Object.assign({}, s.conf, { valore: e.target.value }) }); },
+      livelliAvv: ORDINE.slice().reverse().map(function (l) {
+        const on = s.conf.livello === l;
+        return { nome: l, bordo: on ? AMBRA : '#3a4148', colore: on ? LUCE : '#949ca3', scegli: function () { self.setState({ conf: Object.assign({}, s.conf, { livello: l }) }); } };
+      }),
+      impostazioni: [
+        { k: 'spesaFortuna', nome: 'Spesa di Fortuna', nota: 'Regola opzionale: dopo un fallimento posso comprare il successo pagando la differenza.' },
+        { k: 'dadiFisici', nome: 'Dadi fisici', nota: 'Il pannello di tiro si apre già pronto per i dadi veri.' }
+      ].map(function (o) {
+        const on = !!s.imp[o.k];
+        return {
+          nome: o.nome, nota: o.nota, stato: on ? 'attiva' : 'spenta',
+          bordo: on ? AMBRA : '#3a4148', colore: on ? LUCE : '#949ca3',
+          cambia: function () {
+            self.setState(function (st) { const i = Object.assign({}, st.imp); i[o.k] = !i[o.k]; return { imp: i }; });
+            self.log('Impostazione', o.nome + ' · ' + (on ? 'spenta' : 'attiva'));
+          }
+        };
+      }),
+      unitaOpzioni: [['piedi', 'Piedi'], ['metri', 'Metri']].map(function (u) {
+        const on = s.imp.unitaRavvicinata === u[0];
+        return {
+          nome: u[1], bordo: on ? AMBRA : '#3a4148', colore: on ? LUCE : '#949ca3',
+          scegli: function () { self.setState(function (st) { return { imp: Object.assign({}, st.imp, { unitaRavvicinata: u[0] }) }; }); }
+        };
+      }),
+
+      openAggiungiAbilita: function () { self.setState({ modale: 'aggiungiAbilita' }); },
+      radiciSpec: Object.keys(SPEC).map(function (r) {
+        const on = s.nuovaSpec.radice === r;
+        return { nome: r, bordo: on ? AMBRA : 'transparent', colore: on ? LUCE : GRIGIO, scegli: function () { self.setState({ nuovaSpec: { radice: r, spec: '' } }); } };
+      }),
+      opzioniSpec: Object.keys(SPEC[s.nuovaSpec.radice] || {}).map(function (nome) {
+        const completo = s.nuovaSpec.radice + ' (' + nome + ')';
+        const gia = s.skills.some(function (x) { return x.nome === completo; });
+        return {
+          nome: nome, bordo: gia ? '#252b30' : '#3a4148', colore: gia ? '#6c747b' : SOFT, cursore: gia ? 'default' : 'pointer',
+          aggiungi: function () {
+            if (gia) return;
+            const base = SPEC[s.nuovaSpec.radice][nome];
+            self.setState(function (st) {
+              return { skills: st.skills.concat([{ nome: completo, base: base, v: base, spunta: false, preferita: false, nonSpuntabile: false, spec: nome, radice: s.nuovaSpec.radice }]) };
+            });
+            self.log('Abilità aggiunta', completo + ' · base ' + base);
+          }
+        };
+      }),
+      opzioniNonComuni: Object.keys(NON_COMUNI).map(function (nome) {
+        const gia = s.skills.some(function (x) { return x.nome === nome; });
+        return {
+          nome: nome, bordo: gia ? '#252b30' : '#3a4148', colore: gia ? '#6c747b' : SOFT, cursore: gia ? 'default' : 'pointer',
+          aggiungi: function () {
+            if (gia) return;
+            const base = NON_COMUNI[nome];
+            self.setState(function (st) { return { skills: st.skills.concat([{ nome: nome, base: base, v: base, spunta: false, preferita: false, nonSpuntabile: false, spec: null, radice: nome }]) }; });
+            self.log('Abilità aggiunta', nome + ' · base ' + base + ' · non comune');
+          }
+        };
+      }),
+      nuovaAbNome: s.nuovaAb.nome, nuovaAbBase: s.nuovaAb.base,
+      onNuovaAbNome: function (e) { self.setState({ nuovaAb: Object.assign({}, s.nuovaAb, { nome: e.target.value }) }); },
+      onNuovaAbBase: function (e) { self.setState({ nuovaAb: Object.assign({}, s.nuovaAb, { base: e.target.value }) }); },
+      aggiungiAbilitaLibera: function () {
+        const nome = s.nuovaAb.nome.trim(); if (!nome) return;
+        if (s.skills.some(function (x) { return x.nome === nome; })) return;
+        const base = Math.max(0, Math.min(99, parseInt(s.nuovaAb.base, 10) || 1));
+        self.setState(function (st) {
+          return { skills: st.skills.concat([{ nome: nome, base: base, v: base, spunta: false, preferita: false, nonSpuntabile: false, spec: null, radice: nome }]), nuovaAb: { nome: '', base: '' } };
+        });
+        self.log('Abilità aggiunta', nome + ' · base ' + base + ' · personalizzata');
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>
