@@ -4,9 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "npm run verifica-icone && npm run genera-catalogo-completo",
     "dev": "vite",
     "verifica-icone": "node scripts/estrai-icone-curate.mjs",
-    "build": "npm run verifica-icone && tsc -b && vite build",
+    "genera-catalogo-completo": "node scripts/estrai-tutte-le-icone.mjs",
+    "build": "npm run verifica-icone && npm run genera-catalogo-completo && tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",

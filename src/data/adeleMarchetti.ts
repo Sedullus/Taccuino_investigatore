@@ -72,6 +72,7 @@ function creaArmi(): Arma[] {
       munizioni: 4,
       malfunzionamento: 100,
       inceppata: false,
+      icona: { id: 'revolver', sorgente: 'manuale', bloccata: false },
     },
     {
       id: 'senza-armi',
@@ -86,6 +87,7 @@ function creaArmi(): Arma[] {
       munizioni: 0,
       malfunzionamento: 101,
       inceppata: false,
+      icona: { id: 'pugno-chiuso', sorgente: 'manuale', bloccata: false },
     },
   ];
 }

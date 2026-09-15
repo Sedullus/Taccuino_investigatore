@@ -1,16 +1,23 @@
-// Trattamento a incisione in cinque strati (§2, livello 1), applicato alle
-// sagome curate di game-icons.net. Vedi docs/decisioni.md per la licenza
-// (CC BY 3.0) e LICENSES.md per il testo completo.
+// Trattamento a incisione in cinque strati (§2). ArmaIcona risolve
+// l'IconaArma salvata su un'arma (catalogo curato, o corpo diretto per una
+// scelta dal catalogo completo); TrattamentoIncisione accetta un corpo
+// direttamente, per riuso dal selettore quando cerca nel catalogo completo
+// di game-icons.net (src/icons/CercaCatalogoCompleto.tsx). Vedi
+// docs/decisioni.md per la licenza (CC BY 3.0) e LICENSES.md per il testo
+// completo.
 
 import { useId } from 'react';
 import { trovaVoce } from './catalogo';
+import type { CorpoIcona } from './corpiCurati.generated';
 import { CORPI_GAME_ICONS } from './corpiCurati.generated';
 import { CORPI_PROTAGONISTE } from './corpiProtagoniste.generated';
+import { risolviDettaglio, type Dettaglio } from './dettaglio';
+import type { IconaArma } from '../rules/types';
 
-export type Dettaglio = 'auto' | 'ricco' | 'piano';
+export type { Dettaglio };
 
 interface Props {
-  iconaId: string;
+  icona: IconaArma | undefined;
   dimensione?: number;
   dettaglio?: Dettaglio;
   className?: string;
@@ -18,19 +25,46 @@ interface Props {
   decorativa?: boolean;
 }
 
-export function ArmaIcona({ iconaId, dimensione = 32, dettaglio = 'auto', className, decorativa }: Props) {
-  const idBase = useId();
-  const voce = trovaVoce(iconaId);
+export function ArmaIcona({ icona, dimensione = 32, dettaglio = 'auto', className, decorativa }: Props) {
+  const voce = icona ? trovaVoce(icona.id) : undefined;
   const daProtagonista = voce?.sorgente === 'manuale' ? CORPI_PROTAGONISTE[voce.id] : undefined;
   const daGameIcons = voce?.sorgente === 'game-icons' && voce.nomeGameIcons ? CORPI_GAME_ICONS[voce.nomeGameIcons] : undefined;
-  const corpo = daProtagonista ?? daGameIcons;
+  const daCorpoDiretto = !voce && icona?.corpo ? icona.corpo : undefined;
+  const corpo = daProtagonista ?? daGameIcons ?? daCorpoDiretto;
   const accento = daProtagonista?.accento;
+  const etichetta = voce?.etichetta ?? icona?.id;
 
-  if (!voce || !corpo) {
-    return <IconaSegnaposto dimensione={dimensione} className={className} etichetta={voce?.etichetta} decorativa={decorativa} />;
+  if (!corpo) {
+    return <IconaSegnaposto dimensione={dimensione} className={className} etichetta={etichetta} decorativa={decorativa} />;
   }
 
-  const risolto = dettaglio === 'auto' ? (dimensione > 32 ? 'ricco' : 'piano') : dettaglio;
+  return (
+    <TrattamentoIncisione
+      corpo={corpo}
+      accento={accento}
+      etichetta={etichetta ?? 'Icona'}
+      dimensione={dimensione}
+      dettaglio={dettaglio}
+      className={className}
+      decorativa={decorativa}
+    />
+  );
+}
+
+interface PropsTrattamento {
+  corpo: CorpoIcona;
+  accento?: string[];
+  etichetta: string;
+  dimensione?: number;
+  dettaglio?: Dettaglio;
+  className?: string;
+  decorativa?: boolean;
+}
+
+/** Le cinque strati applicati a un corpo qualsiasi (non solo del catalogo curato). */
+export function TrattamentoIncisione({ corpo, accento, etichetta, dimensione = 32, dettaglio = 'auto', className, decorativa }: PropsTrattamento) {
+  const idBase = useId();
+  const risolto = risolviDettaglio(dettaglio, dimensione);
   const [, , vwStr, vhStr] = corpo.viewBox.split(' ');
   const vw = Number(vwStr);
   const vh = Number(vhStr);
@@ -47,7 +81,7 @@ export function ArmaIcona({ iconaId, dimensione = 32, dettaglio = 'auto', classN
       className={className}
       role={decorativa ? undefined : 'img'}
       aria-hidden={decorativa ? true : undefined}
-      aria-label={decorativa ? undefined : voce.etichetta}
+      aria-label={decorativa ? undefined : etichetta}
     >
       <defs>
         <radialGradient id={sfondoId} cx="42%" cy="38%" r="70%">

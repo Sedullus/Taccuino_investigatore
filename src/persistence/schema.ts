@@ -4,7 +4,7 @@
 import { z } from 'zod';
 import { CARATTERISTICHE } from '../rules/types';
 
-export const VERSIONE_SCHEMA_CORRENTE = 1;
+export const VERSIONE_SCHEMA_CORRENTE = 2;
 
 const caratteristicheSchema = z.object(
   Object.fromEntries(CARATTERISTICHE.map((c) => [c, z.number()])) as Record<(typeof CARATTERISTICHE)[number], z.ZodNumber>,
@@ -34,6 +34,13 @@ const abilitaSchema = z.object({
   nonSpuntabile: z.boolean(),
 });
 
+const iconaArmaSchema = z.object({
+  id: z.string(),
+  sorgente: z.enum(['manuale', 'game-icons']),
+  bloccata: z.boolean(),
+  corpo: z.object({ viewBox: z.string(), percorsi: z.array(z.string()) }).optional(),
+});
+
 const armaSchema = z.object({
   id: z.string(),
   nome: z.string(),
@@ -47,6 +54,7 @@ const armaSchema = z.object({
   munizioni: z.number(),
   malfunzionamento: z.number(),
   inceppata: z.boolean(),
+  icona: iconaArmaSchema.optional(),
 });
 
 const condizioniSchema = z.object({

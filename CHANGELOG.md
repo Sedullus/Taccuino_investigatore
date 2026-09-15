@@ -2,6 +2,29 @@
 
 Tutte le modifiche rilevanti del progetto, organizzate per fase di sviluppo.
 
+## Icone delle armi in stile inciso
+
+### Aggiunto
+- Catalogo curato di ~40 icone (`src/icons/catalogo.ts`): 12 "protagoniste" disegnate a mano (revolver, pistola semiautomatica, fucile a pompa, fucile a canna rigata, mitra, coltello, randello, tirapugni, pugno chiuso, bastone da passeggio, ascia, bottiglia molotov) più ~26 voci sul trattamento automatico di sagome verificate di game-icons.net, con parole chiave italiane/inglesi per il suggerimento.
+- Trattamento a incisione in cinque strati (`ArmaIcona`/`TrattamentoIncisione`): lastra scura e calda (fissa, indipendente dal tema chiaro/scuro dell'app), corpo, tratteggio diagonale ritagliato nella sagoma, contorno chiaro, accento ramato per le protagoniste. Resa "ricca" sopra i 32px, "piana" a 32px o meno.
+- Suggerimento automatico dell'icona dal nome dell'arma (`src/icons/suggerimento.ts`): normalizzazione, punteggio per corrispondenza esatta/contenuta/su abilità collegata/approssimata (Levenshtein), fino a 3 suggerimenti. Un'icona scelta a mano resta bloccata anche cambiando il nome, con un pulsante per tornare al suggerimento automatico.
+- Selettore di icona (`IconaSelezionatore`): set curato in griglia per categoria, più ricerca sul catalogo completo di game-icons (oltre 4.100 icone) caricata **solo** via `import()` dinamico alla prima ricerca — non pesa sul caricamento iniziale dell'app (bundle principale: da 116 KB a 146 KB gzip; il catalogo completo resta in un blocco separato di 2,8 MB gzip, precachato dal Service Worker per l'uso offline ma mai scaricato finché non si cerca).
+- Script `scripts/estrai-icone-curate.mjs` (verifica ogni nome contro il pacchetto reale, collegato a `npm run build` tramite `npm run verifica-icone`) e `scripts/estrai-tutte-le-icone.mjs` (estrae il catalogo completo per la ricerca lazy) e `scripts/disegna-protagoniste.mjs` (le 12 icone originali, da primitive geometriche).
+- Modello dati: campo `icona` opzionale sull'arma (`versioneSchema` 1 → 2, migrazione registrata anche se non trasforma dati — il campo è opzionale e la scheda calcola comunque un suggerimento al volo per le armi senza icona salvata).
+- Schermata **Crediti** (dalle Impostazioni) e `LICENSES.md` con l'attribuzione CC BY 3.0 per game-icons.net.
+- 33 test automatici (`src/icons/__tests__/`) sui casi obbligatori della specifica (suggerimento, dettaglio, catalogo/verifica).
+
+### Corretto durante lo sviluppo e il collaudo
+- La soglia minima del punteggio di suggerimento (specificata a 6) era più alta del punteggio massimo di una corrispondenza solo approssimata (4): un refuso puro non avrebbe mai superato la soglia. Abbassata a 4 — vedi `docs/decisioni.md`.
+- Una parola chiave troppo generica ("fucile") su una sola voce del catalogo (fucile a canna rigata) faceva vincere quella voce anche per nomi di fucili a canne mozze. Corretto redistribuendo la parola chiave sulle voci pertinenti.
+- Le icone scelte dal catalogo completo (non curato) vengono salvate con il proprio percorso SVG sull'arma stessa, non solo un riferimento: altrimenti servirebbe ricaricare l'intero catalogo (6+ MB) solo per rivederle altrove nella scheda.
+- Il build falliva perché il blocco lazy del catalogo completo (6,4 MB) superava il limite di precache del Service Worker (2 MB di default): alzato esplicitamente a 8 MB in `vite.config.ts`.
+- `LICENSES.md` indicava per errore che i font del prototipo di design sono caricati da Google Fonts nell'app pubblicata: non è così (violerebbe il vincolo "nessuna chiamata di rete a runtime") — l'app usa i font di sistema come ripiego. Corretto, e segnalato come possibile miglioria futura (servirebbe includere i file dei font nel repository).
+
+### Note
+- Due mappature del catalogo non hanno un riscontro diretto in game-icons.net e sono approssimazioni dichiarate: **garrota** (`wire-coil`, un filo attorcigliato) e **sigillo** (`pentagram-rose`, esplicitamente un pentagramma). Nessuna icona "punto interrogativo" esiste nel pacchetto: il ripiego è un "?" disegnato nello stesso stile di lastra.
+- Le icone non sono ancora mostrate nel Registro di sessione (solo nell'elenco armi e nella scheda arma): il registro non tiene traccia di quale arma sia coinvolta in ogni voce in un modo che permetta di risalire all'icona senza un cambiamento più ampio del modello del registro.
+
 ## Fase 1 — Fondamenta (MVP giocabile)
 
 ### Aggiunto

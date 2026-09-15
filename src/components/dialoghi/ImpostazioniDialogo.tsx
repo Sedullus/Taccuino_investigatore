@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useInvestigatoreStore } from '../../store/investigatoreStore';
 import type { Tema } from '../../hooks/useTema';
 import { Dialogo } from '../comuni/Dialogo';
+import { CreditiDialogo } from './CreditiDialogo';
 import comuni from '../../theme/comuni.module.css';
 
 interface Props {
@@ -19,6 +21,7 @@ export function ImpostazioniDialogo({ onChiudi, tema, setTema }: Props) {
   const attivo = useInvestigatoreStore((s) => s.attivo);
   const toggleImpostazione = useInvestigatoreStore((s) => s.toggleImpostazione);
   const setUnitaDistanza = useInvestigatoreStore((s) => s.setUnitaDistanza);
+  const [creditiAperti, setCreditiAperti] = useState(false);
 
   return (
     <Dialogo titolo="Impostazioni" onChiudi={onChiudi}>
@@ -70,12 +73,16 @@ export function ImpostazioniDialogo({ onChiudi, tema, setTema }: Props) {
           </>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <button type="button" className={comuni.bottoneTesto} onClick={() => setCreditiAperti(true)}>
+            Crediti
+          </button>
           <button type="button" className={comuni.bottoneTesto} onClick={onChiudi}>
             Chiudi
           </button>
         </div>
       </div>
+      {creditiAperti && <CreditiDialogo onChiudi={() => setCreditiAperti(false)} />}
     </Dialogo>
   );
 }

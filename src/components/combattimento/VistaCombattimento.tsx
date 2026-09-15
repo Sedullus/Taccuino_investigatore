@@ -3,6 +3,9 @@ import { useInvestigatoreStore } from '../../store/investigatoreStore';
 import { bonusDannoEStruttura } from '../../rules/derived';
 import { desPerIniziativa, esitoManovra, gittataRavvicinataPiedi, piediInMetriApprossimati } from '../../rules/combat';
 import type { ModalitaBD, TipoDanno } from '../../rules/types';
+import { ArmaIcona } from '../../icons/ArmaIcona';
+import { IconaSelezionatore } from '../../icons/IconaSelezionatore';
+import { iconaEffettivaArma } from '../../icons/suggerimento';
 import comuni from '../../theme/comuni.module.css';
 import styles from './VistaCombattimento.module.css';
 
@@ -19,6 +22,7 @@ const MODALITA_BD: { valore: ModalitaBD; nome: string }[] = [
 
 export function VistaCombattimento() {
   const attivo = useInvestigatoreStore((s) => s.attivo);
+  const modalita = useInvestigatoreStore((s) => s.modalita);
   const combattimento = useInvestigatoreStore((s) => s.combattimento);
   const toggleArmaPronta = useInvestigatoreStore((s) => s.toggleArmaPronta);
   const toggleRavvicinata = useInvestigatoreStore((s) => s.toggleRavvicinata);
@@ -31,10 +35,15 @@ export function VistaCombattimento() {
   const ricaricaArma = useInvestigatoreStore((s) => s.ricaricaArma);
   const aggiungiArma = useInvestigatoreStore((s) => s.aggiungiArma);
   const rimuoviArma = useInvestigatoreStore((s) => s.rimuoviArma);
+  const rinominaArma = useInvestigatoreStore((s) => s.rinominaArma);
+  const impostaIconaArma = useInvestigatoreStore((s) => s.impostaIconaArma);
+  const ripristinaSuggerimentoIconaArma = useInvestigatoreStore((s) => s.ripristinaSuggerimentoIconaArma);
 
   const [nuovo, setNuovo] = useState({ nome: '', danno: '1D6', gittataBase: 'contatto', caricatore: '0', malfunzionamento: '100', abilitaCollegata: '', tipo: 'contundente' as TipoDanno, bdMode: 'completo' as ModalitaBD });
+  const [selettoreArmaId, setSelettoreArmaId] = useState<string | null>(null);
 
   if (!attivo) return null;
+  const gioco = modalita === 'gioco';
 
   const iniziativa = desPerIniziativa(attivo.caratteristiche.DES, combattimento.armaPronta);
   const piedi = gittataRavvicinataPiedi(attivo.caratteristiche.DES);
@@ -81,10 +90,23 @@ export function VistaCombattimento() {
         Fino alla gittata base il tiro è Normale, fino al doppio è Arduo, fino al quadruplo è Estremo. La difficoltà si sceglie nel pannello di tiro.
       </p>
 
-      {attivo.armi.map((arma) => (
+      {attivo.armi.map((arma) => {
+        const iconaEffettiva = iconaEffettivaArma(arma.nome, arma.abilitaCollegata, arma.icona);
+        return (
         <div key={arma.id} className={styles.armaCard}>
           <div className={styles.armaTesta}>
-            <span style={{ fontSize: 21, color: 'var(--colore-testo)' }}>{arma.nome}</span>
+            {gioco ? (
+              <ArmaIcona icona={iconaEffettiva} dimensione={32} />
+            ) : (
+              <button type="button" onClick={() => setSelettoreArmaId(arma.id)} style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer' }} aria-label={`Cambia icona per ${arma.nome}`}>
+                <ArmaIcona icona={iconaEffettiva} dimensione={32} decorativa />
+              </button>
+            )}
+            {gioco ? (
+              <span style={{ fontSize: 21, color: 'var(--colore-testo)' }}>{arma.nome}</span>
+            ) : (
+              <input className={comuni.input} style={{ width: 180, fontSize: 17 }} value={arma.nome} onChange={(e) => rinominaArma(arma.id, e.target.value)} />
+            )}
             <span className="cifre" style={{ fontSize: 13, color: 'var(--colore-testo-attenuato)' }}>
               {arma.danno} · {arma.tipo} · {arma.gittataBase} · {arma.attacchiPerRound} attacchi
             </span>
@@ -140,7 +162,8 @@ export function VistaCombattimento() {
             </div>
           )}
         </div>
-      ))}
+        );
+      })}
 
       <div className={styles.nuovaArmaCard}>
         <span style={{ fontFamily: 'var(--font-prosa)', fontSize: 19, color: 'var(--colore-testo)' }}>Metto a verbale una nuova arma</span>
@@ -214,6 +237,24 @@ export function VistaCombattimento() {
           </span>
         </div>
       </div>
+
+      {selettoreArmaId && (
+        <IconaSelezionatore
+          onChiudi={() => setSelettoreArmaId(null)}
+          onScegli={(icona) => {
+            impostaIconaArma(selettoreArmaId, icona.id, icona.sorgente, icona.corpo);
+            setSelettoreArmaId(null);
+          }}
+          onNessuna={() => {
+            impostaIconaArma(selettoreArmaId, 'ripiego', 'manuale');
+            setSelettoreArmaId(null);
+          }}
+          onRipristinaSuggerimento={() => {
+            ripristinaSuggerimentoIconaArma(selettoreArmaId);
+            setSelettoreArmaId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

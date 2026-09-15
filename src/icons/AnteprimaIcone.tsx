@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react';
-import { CATALOGO_ICONE } from './catalogo';
-import { ArmaIcona } from './ArmaIcona';
+import { CATALOGO_ICONE, trovaVoce } from './catalogo';
+import { ArmaIcona, type Dettaglio } from './ArmaIcona';
 
 const DUBBIE = new Set(['garrota', 'sigillo']);
+
+/** Comodo per l'anteprima: risolve la sorgente dal catalogo dato solo l'id. */
+function IconaPreview({ id, dimensione, dettaglio }: { id: string; dimensione: number; dettaglio?: Dettaglio }) {
+  const voce = trovaVoce(id);
+  return <ArmaIcona icona={{ id, sorgente: voce?.sorgente ?? 'manuale', bloccata: false }} dimensione={dimensione} dettaglio={dettaglio} />;
+}
 
 export function AnteprimaIcone() {
   const [tema, setTema] = useState<'chiaro' | 'scuro'>('scuro');
@@ -31,26 +37,26 @@ export function AnteprimaIcone() {
             <strong>{id}</strong>
             <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
               <Etichettata px={24}>
-                <ArmaIcona iconaId={id} dimensione={24} />
+                <IconaPreview id={id} dimensione={24} />
               </Etichettata>
               <Etichettata px={32}>
-                <ArmaIcona iconaId={id} dimensione={32} />
+                <IconaPreview id={id} dimensione={32} />
               </Etichettata>
               <Etichettata px={48}>
-                <ArmaIcona iconaId={id} dimensione={48} />
+                <IconaPreview id={id} dimensione={48} />
               </Etichettata>
               <Etichettata px={64}>
-                <ArmaIcona iconaId={id} dimensione={64} />
+                <IconaPreview id={id} dimensione={64} />
               </Etichettata>
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
               <div>
                 <div style={{ fontSize: 11, color: 'var(--colore-testo-debole)' }}>forzata piana, 48px</div>
-                <ArmaIcona iconaId={id} dimensione={48} dettaglio="piano" />
+                <IconaPreview id={id} dimensione={48} dettaglio="piano" />
               </div>
               <div>
                 <div style={{ fontSize: 11, color: 'var(--colore-testo-debole)' }}>forzata ricca, 24px</div>
-                <ArmaIcona iconaId={id} dimensione={24} dettaglio="ricco" />
+                <IconaPreview id={id} dimensione={24} dettaglio="ricco" />
               </div>
             </div>
           </div>
@@ -59,7 +65,7 @@ export function AnteprimaIcone() {
 
       <h2 style={{ fontFamily: 'var(--font-prosa)', fontWeight: 400 }}>Ripiego (nessun'icona "punto interrogativo" in game-icons)</h2>
       <div style={{ marginBottom: 32 }}>
-        <ArmaIcona iconaId={ripiego.id} dimensione={48} />
+        <IconaPreview id={ripiego.id} dimensione={48} />
         <p style={{ fontSize: 13, color: 'var(--colore-testo-attenuato)', maxWidth: '60ch' }}>
           Proposta: un "?" disegnato con lo stesso stile di lastra, invece di una sagoma dal catalogo (che non esiste).
         </p>
@@ -69,7 +75,7 @@ export function AnteprimaIcone() {
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 32 }}>
         {protagoniste.map((v) => (
           <div key={v.id} style={{ textAlign: 'center' }}>
-            <ArmaIcona iconaId={v.id} dimensione={48} />
+            <IconaPreview id={v.id} dimensione={48} />
             <div style={{ fontSize: 12 }}>{v.etichetta}</div>
           </div>
         ))}
@@ -79,7 +85,7 @@ export function AnteprimaIcone() {
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         {voci.map((v) => (
           <div key={v.id} style={{ textAlign: 'center', width: 100, border: DUBBIE.has(v.id) ? '1px solid var(--colore-pericolo)' : undefined, padding: 6, borderRadius: 4 }}>
-            <ArmaIcona iconaId={v.id} dimensione={32} />
+            <IconaPreview id={v.id} dimensione={32} />
             <div style={{ fontSize: 12 }}>{v.etichetta}</div>
             <div style={{ fontSize: 10, color: 'var(--colore-testo-debole)' }}>{v.nomeGameIcons}</div>
           </div>

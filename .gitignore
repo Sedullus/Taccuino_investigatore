@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Catalogo completo delle icone (§6): 6+ MB, generato da
+# scripts/estrai-tutte-le-icone.mjs (npm run genera-catalogo-completo), non
+# committato per non gonfiare il repository — rigenerato a ogni npm run
+# dev/build.
+src/icons/corpiCompleti.generated.ts
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -28,10 +28,15 @@ import {
   NON_SPUNTABILI,
   nomeConSpecializzazione,
 } from '../rules/skills1920';
-import type { Abilita, Arma, Caratteristica, ChiaveOverrideNumerico, Compagno, Investigatore, Trascorsi } from '../rules/types';
+import type { Abilita, Arma, Caratteristica, ChiaveOverrideNumerico, Compagno, IconaArma, Investigatore, Trascorsi } from '../rules/types';
 import { creaAdeleMarchetti } from '../data/adeleMarchetti';
+import { iconaEffettivaArma } from '../icons/suggerimento';
 import { nuovaVoceRegistro } from './registro';
 import { creaTiro, type TiroInCorso } from './tiro';
+
+function iconaSuggeritaPer(nome: string, abilitaCollegata: string): IconaArma | undefined {
+  return iconaEffettivaArma(nome, abilitaCollegata, undefined);
+}
 
 const LIMITE_UNDO = 20;
 
@@ -79,6 +84,7 @@ function schedaVuota(id: string): Investigatore {
         munizioni: 0,
         malfunzionamento: 101,
         inceppata: false,
+        icona: { id: 'pugno-chiuso', sorgente: 'manuale', bloccata: false },
       },
     ],
     trascorsi: {
@@ -188,6 +194,9 @@ interface StatoStore {
   ricaricaArma: (armaId: string) => void;
   aggiungiArma: (arma: Omit<Arma, 'id' | 'inceppata' | 'munizioni'>) => void;
   rimuoviArma: (id: string) => void;
+  rinominaArma: (armaId: string, nome: string) => void;
+  impostaIconaArma: (armaId: string, iconaId: string, sorgente: IconaArma['sorgente'], corpo?: IconaArma['corpo']) => void;
+  ripristinaSuggerimentoIconaArma: (armaId: string) => void;
 
   // ── Fine scenario (§6, Fase 2) ──────────────────────────────────────────
   eseguiSviluppoTutte: () => { nome: string; aumenta: boolean; nuovoValore: number; guadagnaSAN: boolean }[];
@@ -691,7 +700,7 @@ export const useInvestigatoreStore = create<StatoStore>((set, get) => {
 
     aggiungiArma(arma) {
       mutaAttivo((b) => {
-        b.armi.push({ ...arma, id: crypto.randomUUID(), munizioni: arma.caricatore, inceppata: false });
+        b.armi.push({ ...arma, id: crypto.randomUUID(), munizioni: arma.caricatore, inceppata: false, icona: iconaSuggeritaPer(arma.nome, arma.abilitaCollegata) });
       }, 'Arma aggiunta', arma.nome);
     },
 
@@ -701,6 +710,31 @@ export const useInvestigatoreStore = create<StatoStore>((set, get) => {
         b.armi = b.armi.filter((a) => a.id !== id);
       });
       set((s) => (s.combattimento.armaAttivaId === id ? { combattimento: { ...s.combattimento, armaAttivaId: null } } : s));
+    },
+
+    rinominaArma(armaId, nome) {
+      mutaAttivo((b) => {
+        const a = b.armi.find((x) => x.id === armaId);
+        if (!a) return;
+        a.nome = nome;
+        if (!a.icona || !a.icona.bloccata) {
+          a.icona = iconaSuggeritaPer(nome, a.abilitaCollegata);
+        }
+      });
+    },
+
+    impostaIconaArma(armaId, iconaId, sorgente, corpo) {
+      mutaAttivo((b) => {
+        const a = b.armi.find((x) => x.id === armaId);
+        if (a) a.icona = { id: iconaId, sorgente, bloccata: true, corpo };
+      }, 'Icona arma', `${armaId} → ${iconaId}`);
+    },
+
+    ripristinaSuggerimentoIconaArma(armaId) {
+      mutaAttivo((b) => {
+        const a = b.armi.find((x) => x.id === armaId);
+        if (a) a.icona = iconaSuggeritaPer(a.nome, a.abilitaCollegata);
+      });
     },
 
     // ── Fine scenario (§6) ───────────────────────────────────────────────

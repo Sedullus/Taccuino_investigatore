@@ -33,9 +33,12 @@ export default defineConfig({
       workbox: {
         // App interamente locale (IndexedDB): precachea tutto il bundle così
         // funziona offline dopo il primo caricamento, senza chiamate di rete
-        // a runtime.
+        // a runtime. Il limite è alzato per includere il blocco lazy del
+        // catalogo icone completo (§6): pesa alcuni MB ma si scarica una
+        // sola volta, con l'app, non ad ogni ricerca.
         globPatterns: ['**/*.{js,css,html,png,svg,webmanifest}'],
         navigateFallback: 'index.html',
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
       },
     }),
   ],

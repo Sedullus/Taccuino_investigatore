@@ -50,6 +50,22 @@ export interface Arma {
   /** Tiro pari o superiore a questo valore = inceppata. */
   malfunzionamento: number;
   inceppata: boolean;
+  /** Icona dell'arma (§ "Icone delle armi in stile inciso"); assente = ripiego. */
+  icona?: IconaArma;
+}
+
+export interface IconaArma {
+  /** Id del catalogo curato (src/icons/catalogo.ts), o nome game-icons se scelta dal catalogo completo. */
+  id: string;
+  sorgente: 'manuale' | 'game-icons';
+  /** true se scelta a mano: non si ricalcola più cambiando il nome dell'arma. */
+  bloccata: boolean;
+  /**
+   * Solo per le icone scelte dal catalogo completo di game-icons.net (non
+   * curate): il percorso SVG va salvato qui, altrimenti servirebbe
+   * ricaricare l'intero catalogo (6+ MB) solo per mostrarla di nuovo.
+   */
+  corpo?: { viewBox: string; percorsi: string[] };
 }
 
 export interface Condizioni {

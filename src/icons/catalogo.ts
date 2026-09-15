@@ -18,10 +18,10 @@ export interface VoceCatalogo {
 
 // ── Livello 2 — protagoniste disegnate a mano (src/icons/protagoniste/) ────
 const PROTAGONISTE: VoceCatalogo[] = [
-  { id: 'revolver', etichetta: 'Revolver', sorgente: 'manuale', categoria: 'fuoco', parole: ['revolver', 'rivoltella', 'pistola a tamburo', '.38', '.45', 'colt', 'tamburo'] },
+  { id: 'revolver', etichetta: 'Revolver', sorgente: 'manuale', categoria: 'fuoco', parole: ['revolver', 'rivoltella', 'pistola a tamburo', '.38', '.45', 'tamburo'] },
   { id: 'pistola-semiautomatica', etichetta: 'Pistola semiautomatica', sorgente: 'manuale', categoria: 'fuoco', parole: ['pistola', 'semiautomatica', 'automatica', 'm1911', 'luger', 'browning'] },
-  { id: 'fucile-a-pompa', etichetta: 'Fucile a pompa', sorgente: 'manuale', categoria: 'fuoco', parole: ['fucile a pompa', 'shotgun', 'pompa', 'doppietta'] },
-  { id: 'fucile-canna-rigata', etichetta: 'Fucile a canna rigata', sorgente: 'manuale', categoria: 'fuoco', parole: ['fucile', 'carabina', 'rifle', 'winchester', 'canna rigata'] },
+  { id: 'fucile-a-pompa', etichetta: 'Fucile a pompa', sorgente: 'manuale', categoria: 'fuoco', parole: ['fucile a pompa', 'shotgun', 'pompa', 'doppietta', 'fucile'] },
+  { id: 'fucile-canna-rigata', etichetta: 'Fucile a canna rigata', sorgente: 'manuale', categoria: 'fuoco', parole: ['carabina', 'rifle', 'winchester', 'canna rigata'] },
   { id: 'mitra', etichetta: 'Mitra', sorgente: 'manuale', categoria: 'fuoco', parole: ['mitra', 'tommy gun', 'thompson', 'mitragliatore', 'sottomitra'] },
   { id: 'coltello', etichetta: 'Coltello', sorgente: 'manuale', categoria: 'mischia', parole: ['coltello', 'pugnale', 'serramanico', 'knife', 'dagger'] },
   { id: 'randello', etichetta: 'Randello', sorgente: 'manuale', categoria: 'mischia', parole: ['randello', 'mazza', 'club', 'manganello'] },
@@ -34,7 +34,7 @@ const PROTAGONISTE: VoceCatalogo[] = [
 
 // ── Livello 1 — trattamento automatico su sagome game-icons.net ───────────
 const GAME_ICONS: VoceCatalogo[] = [
-  { id: 'fucile-canne-mozze', etichetta: 'Fucile a canne mozze', sorgente: 'game-icons', nomeGameIcons: 'sawed-off-shotgun', categoria: 'fuoco', parole: ['canne mozze', 'lupara', 'sawed-off'] },
+  { id: 'fucile-canne-mozze', etichetta: 'Fucile a canne mozze', sorgente: 'game-icons', nomeGameIcons: 'sawed-off-shotgun', categoria: 'fuoco', parole: ['canne mozze', 'lupara', 'sawed-off', 'fucile'] },
   { id: 'mitragliatrice', etichetta: 'Mitragliatrice', sorgente: 'game-icons', nomeGameIcons: 'machine-gun', categoria: 'fuoco', parole: ['mitragliatrice', 'machine gun', 'browning m1919'] },
   { id: 'lanciafiamme', etichetta: 'Lanciafiamme', sorgente: 'game-icons', nomeGameIcons: 'flamethrower', categoria: 'fuoco', parole: ['lanciafiamme', 'flamethrower'] },
   { id: 'munizioni', etichetta: 'Munizioni', sorgente: 'game-icons', nomeGameIcons: 'bullets', categoria: 'fuoco', parole: ['munizioni', 'proiettili', 'cartucce', 'pallottole'] },

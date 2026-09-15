@@ -2,7 +2,7 @@
 
 Una scheda investigatore digitale, pensata per giocare al tavolo a un gioco di ruolo investigativo anni '20 con un sistema basato su percentuali. Funziona **offline**, non ha un account, e **tutti i dati restano sul dispositivo** (IndexedDB del browser) — non c'è alcun server, alcuna sincronizzazione, alcuna chiamata di rete a runtime.
 
-Le regole implementate e le scelte di modellazione sono documentate in [`docs/regole-scheda-7e.md`](docs/regole-scheda-7e.md) (fonte di verità) e [`docs/decisioni.md`](docs/decisioni.md) (i punti ambigui e come sono stati risolti). Lo storico delle fasi di sviluppo è in [`CHANGELOG.md`](CHANGELOG.md).
+Le regole implementate e le scelte di modellazione sono documentate in [`docs/regole-scheda-7e.md`](docs/regole-scheda-7e.md) (fonte di verità) e [`docs/decisioni.md`](docs/decisioni.md) (i punti ambigui e come sono stati risolti). Lo storico delle fasi di sviluppo è in [`CHANGELOG.md`](CHANGELOG.md). Le icone delle armi usano sagome di terze parti con licenza aperta: l'attribuzione è in [`LICENSES.md`](LICENSES.md) e nella schermata Crediti dell'app.
 
 > Nessun logo, marchio o testo dei manuali ufficiali è riprodotto in quest'app: è uno strumento indipendente, scritto da zero.
 
@@ -119,12 +119,16 @@ src/
   data/            personaggio di esempio precaricato
   theme/           token di colore/tipografia, tema chiaro e scuro
   hooks/           Wake Lock, tema
+  icons/           icone delle armi: catalogo, suggerimento, selettore, trattamento a incisione
 docs/
   regole-scheda-7e.md   fonte di verità per le regole
   decisioni.md           punti ambigui della specifica e scelta adottata
   design/                 riferimento visivo del prototipo
 scripts/
-  generate-icons.mjs      genera le icone della PWA (già eseguito; da rilanciare solo se cambia il disegno)
+  generate-icons.mjs         genera le icone della PWA (già eseguito; da rilanciare solo se cambia il disegno)
+  estrai-icone-curate.mjs    verifica e ricava i percorsi SVG del catalogo curato (npm run verifica-icone)
+  estrai-tutte-le-icone.mjs  estrae il catalogo completo per la ricerca (blocco lazy separato)
+  disegna-protagoniste.mjs   le 12 icone armi originali
 ```
 
 ## Comandi disponibili
@@ -136,3 +140,4 @@ scripts/
 | `npm run build` | Controlla i tipi TypeScript e produce la build di produzione in `dist/` |
 | `npm run preview` | Serve la build di produzione in locale, per un ultimo controllo (anche offline) |
 | `npm run lint` | Controllo di stile del codice |
+| `npm run verifica-icone` | Verifica il catalogo delle icone armi contro il pacchetto reale (eseguito anche automaticamente da `npm run build`) |
