@@ -3,6 +3,7 @@ import { useInvestigatoreStore } from '../../store/investigatoreStore';
 import { bonusDannoEStruttura } from '../../rules/derived';
 import { desPerIniziativa, esitoManovra, gittataRavvicinataPiedi, piediInMetriApprossimati } from '../../rules/combat';
 import type { ModalitaBD, TipoDanno } from '../../rules/types';
+import { ABILITA_MULTI_ISTANZA, ETICHETTA_ARMI_FUOCO, ETICHETTA_MISCHIA, nomeConSpecializzazione } from '../../rules/skills1920';
 import { ArmaIcona } from '../../icons/ArmaIcona';
 import { IconaSelezionatore } from '../../icons/IconaSelezionatore';
 import { iconaEffettivaArma } from '../../icons/suggerimento';
@@ -34,6 +35,7 @@ export function VistaCombattimento() {
   const tiraDannoEstremoArma = useInvestigatoreStore((s) => s.tiraDannoEstremoArma);
   const ricaricaArma = useInvestigatoreStore((s) => s.ricaricaArma);
   const aggiungiArma = useInvestigatoreStore((s) => s.aggiungiArma);
+  const aggiungiAbilitaDaCatalogo = useInvestigatoreStore((s) => s.aggiungiAbilitaDaCatalogo);
   const rimuoviArma = useInvestigatoreStore((s) => s.rimuoviArma);
   const rinominaArma = useInvestigatoreStore((s) => s.rinominaArma);
   const impostaIconaArma = useInvestigatoreStore((s) => s.impostaIconaArma);
@@ -53,7 +55,13 @@ export function VistaCombattimento() {
   const strutturaPropria = attivo.override.struttura ?? struttura;
   const manovra = esitoManovra(strutturaPropria, strAvv);
 
-  const nomiAbilitaCombattimento = attivo.abilita.filter((a) => a.radice === 'Combattere' || a.radice === 'Armi da Fuoco').map((a) => a.nome);
+  // L'elenco viene dall'intero catalogo (§4.2), non solo dalle abilità già
+  // allenate: scegliendo una specializzazione non ancora sulla scheda, viene
+  // aggiunta in automatico (a valore base) quando si registra l'arma.
+  const opzioniAbilitaArma = [
+    ...ABILITA_MULTI_ISTANZA[ETICHETTA_MISCHIA]!.map((v) => ({ radice: ETICHETTA_MISCHIA, specializzazione: v.nome })),
+    ...ABILITA_MULTI_ISTANZA[ETICHETTA_ARMI_FUOCO]!.map((v) => ({ radice: ETICHETTA_ARMI_FUOCO, specializzazione: v.nome })),
+  ].map((o) => ({ ...o, nome: nomeConSpecializzazione(o.radice, o.specializzazione) }));
 
   return (
     <div className={`${styles.blocco} animato`}>
@@ -176,11 +184,14 @@ export function VistaCombattimento() {
         </div>
         <div className={styles.rigaTop}>
           <span className={comuni.etichetta}>ABILITÀ</span>
-          {nomiAbilitaCombattimento.map((n) => (
-            <button key={n} type="button" className={nuovo.abilitaCollegata === n ? comuni.bottoneTestoAttivo : comuni.bottoneTesto} onClick={() => setNuovo({ ...nuovo, abilitaCollegata: n })}>
-              {n}
+          {opzioniAbilitaArma.map((o) => (
+            <button key={o.nome} type="button" className={nuovo.abilitaCollegata === o.nome ? comuni.bottoneTestoAttivo : comuni.bottoneTesto} onClick={() => setNuovo({ ...nuovo, abilitaCollegata: o.nome })}>
+              {o.specializzazione}
             </button>
           ))}
+          {nuovo.abilitaCollegata && !attivo.abilita.some((a) => a.nome === nuovo.abilitaCollegata) && (
+            <span style={{ fontSize: 13, color: 'var(--colore-testo-debole)' }}>({nuovo.abilitaCollegata} non ancora sulla scheda: verrà aggiunta a valore base)</span>
+          )}
         </div>
         <div className={styles.rigaTop}>
           <span className={comuni.etichetta}>TIPO</span>
@@ -203,6 +214,10 @@ export function VistaCombattimento() {
             style={{ marginLeft: 'auto' }}
             disabled={!nuovo.nome.trim() || !nuovo.abilitaCollegata}
             onClick={() => {
+              const scelta = opzioniAbilitaArma.find((o) => o.nome === nuovo.abilitaCollegata);
+              if (scelta && !attivo.abilita.some((a) => a.nome === scelta.nome)) {
+                aggiungiAbilitaDaCatalogo(scelta.radice, scelta.specializzazione);
+              }
               aggiungiArma({
                 nome: nuovo.nome.trim(),
                 danno: nuovo.danno.trim() || '1D6',
