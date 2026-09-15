@@ -5,6 +5,7 @@
 import { useId } from 'react';
 import { trovaVoce } from './catalogo';
 import { CORPI_GAME_ICONS } from './corpiCurati.generated';
+import { CORPI_PROTAGONISTE } from './corpiProtagoniste.generated';
 
 export type Dettaglio = 'auto' | 'ricco' | 'piano';
 
@@ -20,7 +21,10 @@ interface Props {
 export function ArmaIcona({ iconaId, dimensione = 32, dettaglio = 'auto', className, decorativa }: Props) {
   const idBase = useId();
   const voce = trovaVoce(iconaId);
-  const corpo = voce?.sorgente === 'game-icons' && voce.nomeGameIcons ? CORPI_GAME_ICONS[voce.nomeGameIcons] : undefined;
+  const daProtagonista = voce?.sorgente === 'manuale' ? CORPI_PROTAGONISTE[voce.id] : undefined;
+  const daGameIcons = voce?.sorgente === 'game-icons' && voce.nomeGameIcons ? CORPI_GAME_ICONS[voce.nomeGameIcons] : undefined;
+  const corpo = daProtagonista ?? daGameIcons;
+  const accento = daProtagonista?.accento;
 
   if (!voce || !corpo) {
     return <IconaSegnaposto dimensione={dimensione} className={className} etichetta={voce?.etichetta} decorativa={decorativa} />;
@@ -87,6 +91,15 @@ export function ArmaIcona({ iconaId, dimensione = 32, dettaglio = 'auto', classN
           <path key={i} d={d} />
         ))}
       </g>
+
+      {/* 5. accento (solo protagoniste) */}
+      {accento && accento.length > 0 && (
+        <g fill="var(--icona-accento)">
+          {accento.map((d, i) => (
+            <path key={i} d={d} />
+          ))}
+        </g>
+      )}
     </svg>
   );
 }
