@@ -6,7 +6,7 @@
   min-height: 44px;
   padding: 9px 14px;
   font-size: 15px;
-  color: var(--colore-testo-attenuato);
+  color: var(--colore-testo-comando);
   background: transparent;
   border: 1px solid var(--colore-bordo-forte);
   border-radius: var(--raggio);
@@ -37,7 +37,7 @@
   background: none;
   border: 0;
   border-bottom: 2px solid transparent;
-  color: var(--colore-testo-attenuato);
+  color: var(--colore-testo-comando);
   font-size: 15px;
   cursor: pointer;
 }

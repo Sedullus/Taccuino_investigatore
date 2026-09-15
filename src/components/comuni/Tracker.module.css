@@ -26,7 +26,7 @@
   align-items: center;
   justify-content: center;
   font-size: 19px;
-  color: var(--colore-testo-attenuato);
+  color: var(--colore-testo-comando);
   background: transparent;
   border: 1px solid var(--colore-bordo-forte);
   border-radius: var(--raggio);

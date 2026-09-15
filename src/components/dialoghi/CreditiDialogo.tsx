@@ -33,6 +33,13 @@ export function CreditiDialogo({ onChiudi }: Props) {
             molotov) sono disegni originali di quest'app.
           </p>
         </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, borderTop: '1px solid var(--colore-bordo)', paddingTop: 14 }}>
+          <span style={{ fontSize: 17, color: 'var(--colore-testo)' }}>Caratteri tipografici</span>
+          <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--colore-testo-attenuato)', margin: 0 }}>
+            Archivo Narrow, IBM Plex Mono e Source Serif 4, distribuiti con licenza SIL Open Font License 1.1, inclusi nell'app (nessun caricamento da
+            Google Fonts a runtime).
+          </p>
+        </div>
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 6 }}>
         <button type="button" className={comuni.bottoneTesto} onClick={onChiudi}>

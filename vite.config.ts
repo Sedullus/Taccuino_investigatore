@@ -36,7 +36,7 @@ export default defineConfig({
         // a runtime. Il limite è alzato per includere il blocco lazy del
         // catalogo icone completo (§6): pesa alcuni MB ma si scarica una
         // sola volta, con l'app, non ad ogni ricerca.
-        globPatterns: ['**/*.{js,css,html,png,svg,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,png,svg,webmanifest,woff,woff2}'],
         navigateFallback: 'index.html',
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
       },

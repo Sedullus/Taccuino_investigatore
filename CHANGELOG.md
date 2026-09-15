@@ -2,6 +2,12 @@
 
 Tutte le modifiche rilevanti del progetto, organizzate per fase di sviluppo.
 
+## Fedeltà visiva al prototipo di design
+
+### Corretto
+- I tre font del prototipo (Archivo Narrow, IBM Plex Mono, Source Serif 4) non venivano mai caricati nell'app pubblicata: senza una chiamata a Google Fonts (vietata dal vincolo "nessuna chiamata di rete a runtime"), il browser mostrava i font di sistema al loro posto, molto diversi da quelli del prototipo. Corretto autoospitando i tre font (pacchetti `@fontsource/*`, licenza SIL OFL 1.1) e includendoli nel bundle — vedi `src/theme/fonts.css`, `LICENSES.md`. I file sono anche precacheati dal Service Worker (aggiunti `woff`/`woff2` a `globPatterns` in `vite.config.ts`), quindi restano disponibili offline.
+- Il colore del testo dei comandi/bottoni (frecce +/-, "Stati", "Impostazioni", "Impugna", "Ricarica", "Nuova giornata", ecc.) usava lo stesso tono delle etichette secondarie attenuate (`--colore-testo-attenuato`, `#99a1a8` nel tema scuro): nel prototipo questi due ruoli hanno colori distinti (etichette `#99a1a8`, comandi `#a8b0b6`, più chiaro). Aggiunto il token `--colore-testo-comando` e applicato ai bottoni condivisi (`comuni.module.css`) e agli step PF/SAN/Fortuna/PM (`Tracker.module.css`).
+
 ## Icone delle armi in stile inciso
 
 ### Aggiunto
@@ -19,7 +25,7 @@ Tutte le modifiche rilevanti del progetto, organizzate per fase di sviluppo.
 - Una parola chiave troppo generica ("fucile") su una sola voce del catalogo (fucile a canna rigata) faceva vincere quella voce anche per nomi di fucili a canne mozze. Corretto redistribuendo la parola chiave sulle voci pertinenti.
 - Le icone scelte dal catalogo completo (non curato) vengono salvate con il proprio percorso SVG sull'arma stessa, non solo un riferimento: altrimenti servirebbe ricaricare l'intero catalogo (6+ MB) solo per rivederle altrove nella scheda.
 - Il build falliva perché il blocco lazy del catalogo completo (6,4 MB) superava il limite di precache del Service Worker (2 MB di default): alzato esplicitamente a 8 MB in `vite.config.ts`.
-- `LICENSES.md` indicava per errore che i font del prototipo di design sono caricati da Google Fonts nell'app pubblicata: non è così (violerebbe il vincolo "nessuna chiamata di rete a runtime") — l'app usa i font di sistema come ripiego. Corretto, e segnalato come possibile miglioria futura (servirebbe includere i file dei font nel repository).
+- `LICENSES.md` indicava per errore che i font del prototipo di design sono caricati da Google Fonts nell'app pubblicata: non è così (violerebbe il vincolo "nessuna chiamata di rete a runtime") — l'app usava i font di sistema come ripiego. Corretto nella documentazione qui, e risolto davvero in seguito (vedi "Fedeltà visiva al prototipo di design" in cima a questo file): i font sono ora autoospitati.
 
 ### Note
 - Due mappature del catalogo non hanno un riscontro diretto in game-icons.net e sono approssimazioni dichiarate: **garrota** (`wire-coil`, un filo attorcigliato) e **sigillo** (`pentagram-rose`, esplicitamente un pentagramma). Nessuna icona "punto interrogativo" esiste nel pacchetto: il ripiego è un "?" disegnato nello stesso stile di lastra.
