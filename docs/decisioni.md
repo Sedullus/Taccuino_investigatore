@@ -42,6 +42,10 @@ La specifica richiede il supporto del token `½BD` ma non ne specifica la tabell
 
 Schivare è sia un valore derivato (§3: `floor(DES/2)`) sia un'abilità del catalogo §4.2 ("Schivare = DES/2"), quindi compare **una sola volta** nella scheda: come voce dell'elenco abilità (con Metà/Quinto e spunta esperienza), la cui `base` è calcolata da DES (sovrascrivibile tramite `override.schivare`, come gli altri valori derivati) e il cui `valore` può crescere con l'esperienza come ogni altra abilità.
 
+### Il ritratto non è incluso nell'export JSON
+
+L'immagine del ritratto (§11, Fase 3) è salvata in IndexedDB separatamente dall'investigatore, referenziata dalla sola chiave in `anagrafica.ritratto`. L'export/import JSON porta con sé quella chiave, ma non i byte dell'immagine: importando la scheda su un altro dispositivo, il ritratto va ricaricato a mano. Scelta deliberata per tenere il file di backup piccolo e leggibile; se in futuro servisse un backup "tutto compreso", il punto da cambiare è `esportaJSON`/`importaJSON` in `src/persistence/importExport.ts`, includendo il contenuto di `leggiRitratto`/`salvaRitratto` (`src/persistence/archivio.ts`).
+
 ### Unità di visualizzazione della gittata ravvicinata — default
 
 Il calcolo resta sempre in piedi (`DES/5`), come richiesto. Il default dell'**unità mostrata** nell'interfaccia (non specificato dalla specifica) è impostato su "metri", più naturale per chi gioca in italiano. Cambiabile nelle Impostazioni in qualsiasi momento (`impostazioni.unitaDistanza`).
