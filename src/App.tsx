@@ -3,6 +3,7 @@ import { useInvestigatoreStore } from './store/investigatoreStore';
 import { VistaStato } from './components/stato/VistaStato';
 import { VistaAbilita } from './components/abilita/VistaAbilita';
 import { VistaCombattimento } from './components/combattimento/VistaCombattimento';
+import { VistaTrascorsi } from './components/trascorsi/VistaTrascorsi';
 import { VistaRegistro } from './components/registro/VistaRegistro';
 import { VistaSviluppo } from './components/sviluppo/VistaSviluppo';
 import { VistaInvestigatori } from './components/investigatori/VistaInvestigatori';
@@ -12,17 +13,19 @@ import { TiroSanitaDialogo } from './components/dialoghi/TiroSanitaDialogo';
 import { ImpostazioniDialogo } from './components/dialoghi/ImpostazioniDialogo';
 import { StatiDialogo } from './components/dialoghi/StatiDialogo';
 import { useWakeLock } from './hooks/useWakeLock';
+import { useTema } from './hooks/useTema';
 import comuni from './theme/comuni.module.css';
 import styles from './components/layout/Shell.module.css';
 
 type Vista = 'scheda' | 'investigatori';
 type TabMobile = 'stato' | 'main';
-type TabContenuto = 'abilita' | 'combattimento' | 'registro' | 'sviluppo';
+type TabContenuto = 'abilita' | 'combattimento' | 'trascorsi' | 'registro' | 'sviluppo';
 type Dialogo = 'danno' | 'sanita' | 'impostazioni' | 'stati' | null;
 
 const TAB_CONTENUTO: { valore: TabContenuto; nome: string }[] = [
   { valore: 'abilita', nome: 'Abilità' },
   { valore: 'combattimento', nome: 'Combattimento' },
+  { valore: 'trascorsi', nome: 'Trascorsi' },
   { valore: 'registro', nome: 'Registro' },
   { valore: 'sviluppo', nome: 'Fine scenario' },
 ];
@@ -34,6 +37,7 @@ export function App() {
   const setModalita = useInvestigatoreStore((s) => s.setModalita);
   const init = useInvestigatoreStore((s) => s.init);
   const apriTiro = useInvestigatoreStore((s) => s.apriTiro);
+  const { tema, setTema } = useTema();
 
   const [vista, setVista] = useState<Vista>('scheda');
   const [tabMobile, setTabMobile] = useState<TabMobile>('stato');
@@ -55,7 +59,7 @@ export function App() {
         <div style={{ padding: '18px clamp(18px,3vw,34px)' }}>
           <VistaInvestigatori />
         </div>
-        {dialogo === 'impostazioni' && attivo && <ImpostazioniDialogo onChiudi={() => setDialogo(null)} />}
+        {dialogo === 'impostazioni' && <ImpostazioniDialogo onChiudi={() => setDialogo(null)} tema={tema} setTema={setTema} />}
       </div>
     );
   }
@@ -77,7 +81,7 @@ export function App() {
           <VistaStato onApriDanno={() => setDialogo('danno')} onApriSanita={() => setDialogo('sanita')} />
         </aside>
         <main className={styles.main}>
-          <div className={styles.rigaTab}>
+          <div className={styles.rigaTab} data-print-hide>
             {TAB_CONTENUTO.map((t) => (
               <button key={t.valore} type="button" className={tab === t.valore ? styles.tabAttiva : styles.tab} onClick={() => setTab(t.valore)}>
                 {t.nome}
@@ -86,12 +90,13 @@ export function App() {
           </div>
           {tab === 'abilita' && <VistaAbilita />}
           {tab === 'combattimento' && <VistaCombattimento />}
+          {tab === 'trascorsi' && <VistaTrascorsi />}
           {tab === 'registro' && <VistaRegistro />}
           {tab === 'sviluppo' && <VistaSviluppo />}
         </main>
       </div>
 
-      <nav className={styles.barraInferiore}>
+      <nav className={styles.barraInferiore} data-print-hide>
         <button type="button" className={tabMobile === 'stato' ? styles.voceBarraAttiva : styles.vociBarra} onClick={() => setTabMobile('stato')}>
           Stato
         </button>
@@ -117,6 +122,16 @@ export function App() {
         </button>
         <button
           type="button"
+          className={tabMobile === 'main' && tab === 'trascorsi' ? styles.voceBarraAttiva : styles.vociBarra}
+          onClick={() => {
+            setTabMobile('main');
+            setTab('trascorsi');
+          }}
+        >
+          Trascorsi
+        </button>
+        <button
+          type="button"
           className={tabMobile === 'main' && tab === 'registro' ? styles.voceBarraAttiva : styles.vociBarra}
           onClick={() => {
             setTabMobile('main');
@@ -124,9 +139,6 @@ export function App() {
           }}
         >
           Registro
-        </button>
-        <button type="button" className={styles.vociBarra} onClick={() => setVista('investigatori')}>
-          Schede
         </button>
       </nav>
 
@@ -150,7 +162,7 @@ export function App() {
           }}
         />
       )}
-      {dialogo === 'impostazioni' && <ImpostazioniDialogo onChiudi={() => setDialogo(null)} />}
+      {dialogo === 'impostazioni' && <ImpostazioniDialogo onChiudi={() => setDialogo(null)} tema={tema} setTema={setTema} />}
       {dialogo === 'stati' && <StatiDialogo onChiudi={() => setDialogo(null)} />}
     </div>
   );
@@ -172,7 +184,7 @@ function Testata({ vista, setVista, modalita, setModalita, onApriImpostazioni, o
   return (
     <div className={styles.intestazione}>
       <span className={styles.titolo}>Taccuino dell'Investigatore</span>
-      <div className={styles.azioniTesta}>
+      <div className={styles.azioniTesta} data-print-hide>
         {mostraAzioniScheda && (
           <>
             <button type="button" className={comuni.bottone} onClick={() => setModalita(modalita === 'gioco' ? 'modifica' : 'gioco')}>

@@ -10,6 +10,7 @@ import {
   eliminaInvestigatore as eliminaInvestigatoreArchivio,
   leggiIdAttivo,
   salvaInvestigatore,
+  salvaRitratto,
   scriviIdAttivo,
 } from '../persistence/archivio';
 import { esportaJSON, importaJSON } from '../persistence/importExport';
@@ -27,7 +28,7 @@ import {
   NON_SPUNTABILI,
   nomeConSpecializzazione,
 } from '../rules/skills1920';
-import type { Abilita, Arma, Caratteristica, ChiaveOverrideNumerico, Investigatore } from '../rules/types';
+import type { Abilita, Arma, Caratteristica, ChiaveOverrideNumerico, Compagno, Investigatore, Trascorsi } from '../rules/types';
 import { creaAdeleMarchetti } from '../data/adeleMarchetti';
 import { nuovaVoceRegistro } from './registro';
 import { creaTiro, type TiroInCorso } from './tiro';
@@ -191,6 +192,18 @@ interface StatoStore {
   // ── Fine scenario (§6, Fase 2) ──────────────────────────────────────────
   eseguiSviluppoTutte: () => { nome: string; aumenta: boolean; nuovoValore: number; guadagnaSAN: boolean }[];
   eseguiRecuperoFortuna: () => { guadagna: boolean; nuovaFortuna: number; tiro: number };
+
+  // ── Trascorsi, equipaggiamento, denaro, compagni, note (§11, Fase 3) ────
+  aggiornaTrascorsi: (campo: keyof Trascorsi, valore: string) => void;
+  aggiungiOggetto: (nome: string) => void;
+  rimuoviOggetto: (indice: number) => void;
+  aggiornaDenaro: (patch: Partial<Investigatore['denaro']>) => void;
+  aggiungiCompagno: () => void;
+  aggiornaCompagno: (indice: number, patch: Partial<Compagno>) => void;
+  rimuoviCompagno: (indice: number) => void;
+  aggiornaNote: (testo: string) => void;
+  timbraOraNote: () => void;
+  salvaRitrattoInvestigatore: (dataUrl: string) => Promise<void>;
 }
 
 export const useInvestigatoreStore = create<StatoStore>((set, get) => {
@@ -734,6 +747,74 @@ export const useInvestigatoreStore = create<StatoStore>((set, get) => {
         }, 'Recupero Fortuna', `tiro ${tiro} supera ${fortunaPrima} · +${esito.nuovaFortuna - fortunaPrima} → Fortuna ${esito.nuovaFortuna}`);
       }
       return { ...esito, tiro };
+    },
+
+    // ── Trascorsi, equipaggiamento, denaro, compagni, note (§11) ──────────
+    aggiornaTrascorsi(campo, valore) {
+      mutaAttivo((b) => {
+        b.trascorsi[campo] = valore;
+      });
+    },
+
+    aggiungiOggetto(nome) {
+      mutaAttivo((b) => {
+        b.equipaggiamento.push(nome);
+      }, 'Equipaggiamento', `aggiunto: ${nome}`);
+    },
+
+    rimuoviOggetto(indice) {
+      const nome = get().attivo?.equipaggiamento[indice];
+      mutaAttivo((b) => {
+        b.equipaggiamento.splice(indice, 1);
+      }, 'Equipaggiamento', `rimosso: ${nome ?? ''}`);
+    },
+
+    aggiornaDenaro(patch) {
+      mutaAttivo((b) => {
+        b.denaro = { ...b.denaro, ...patch };
+      });
+    },
+
+    aggiungiCompagno() {
+      mutaAttivo((b) => {
+        b.compagni.push({ personaggio: '', giocatore: '' });
+      });
+    },
+
+    aggiornaCompagno(indice, patch) {
+      mutaAttivo((b) => {
+        const c = b.compagni[indice];
+        if (c) b.compagni[indice] = { ...c, ...patch };
+      });
+    },
+
+    rimuoviCompagno(indice) {
+      mutaAttivo((b) => {
+        b.compagni.splice(indice, 1);
+      });
+    },
+
+    aggiornaNote(testo) {
+      mutaAttivo((b) => {
+        b.note = testo;
+      });
+    },
+
+    timbraOraNote() {
+      const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      mutaAttivo((b) => {
+        b.note = b.note ? `${b.note}\n[${ora}] ` : `[${ora}] `;
+      });
+    },
+
+    async salvaRitrattoInvestigatore(dataUrl) {
+      const s = get();
+      if (!s.attivo) return;
+      const chiave = s.attivo.id;
+      await salvaRitratto(chiave, dataUrl);
+      mutaAttivo((b) => {
+        b.anagrafica.ritratto = chiave;
+      }, 'Ritratto', 'aggiornato');
     },
   };
 });

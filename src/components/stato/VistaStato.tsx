@@ -1,6 +1,9 @@
+import { useEffect, useRef, useState } from 'react';
 import { useInvestigatoreStore } from '../../store/investigatoreStore';
 import { meta, quinto, calcolaDerivati } from '../../rules/derived';
 import type { Caratteristica, ChiaveOverrideNumerico, Investigatore } from '../../rules/types';
+import { leggiRitratto } from '../../persistence/archivio';
+import { ridimensionaImmagine } from '../../utils/immagine';
 import { Tracker } from '../comuni/Tracker';
 import comuni from '../../theme/comuni.module.css';
 import styles from './VistaStato.module.css';
@@ -37,8 +40,35 @@ export function VistaStato({ onApriDanno, onApriSanita }: Props) {
   const deltaRisorsa = useInvestigatoreStore((s) => s.deltaRisorsa);
   const apriTiro = useInvestigatoreStore((s) => s.apriTiro);
   const nuovaGiornata = useInvestigatoreStore((s) => s.nuovaGiornata);
+  const salvaRitrattoInvestigatore = useInvestigatoreStore((s) => s.salvaRitrattoInvestigatore);
+
+  const [ritrattoUrl, setRitrattoUrl] = useState<string | null>(null);
+  const inputFile = useRef<HTMLInputElement>(null);
+  const chiaveRitratto = attivo?.anagrafica.ritratto;
+
+  useEffect(() => {
+    let annullato = false;
+    if (!chiaveRitratto) {
+      setRitrattoUrl(null);
+      return;
+    }
+    void leggiRitratto(chiaveRitratto).then((url) => {
+      if (!annullato) setRitrattoUrl(url ?? null);
+    });
+    return () => {
+      annullato = true;
+    };
+  }, [chiaveRitratto]);
 
   if (!attivo) return null;
+
+  async function suFileScelto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const dataUrl = await ridimensionaImmagine(file);
+    await salvaRitrattoInvestigatore(dataUrl);
+  }
   const gioco = modalita === 'gioco';
   const miti = attivo.abilita.find((a) => a.radice === 'Miti di Cthulhu')?.valore ?? 0;
   const derivati = calcolaDerivati(attivo.caratteristiche, attivo.anagrafica.eta, miti);
@@ -52,9 +82,16 @@ export function VistaStato({ onApriDanno, onApriSanita }: Props) {
   return (
     <div className={styles.blocco}>
       <div className={styles.intestazione}>
-        <div className={styles.ritratto} aria-hidden>
+        <button
+          type="button"
+          className={styles.ritratto}
+          onClick={() => inputFile.current?.click()}
+          aria-label="Cambia ritratto"
+          style={ritrattoUrl ? { backgroundImage: `url(${ritrattoUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', color: 'transparent' } : undefined}
+        >
           {attivo.anagrafica.nome.slice(0, 1)}
-        </div>
+        </button>
+        <input ref={inputFile} type="file" accept="image/*" style={{ display: 'none' }} onChange={suFileScelto} />
         <div className={styles.datiAnagrafici}>
           <span className={styles.nome}>{attivo.anagrafica.nome}</span>
           <span className={styles.sottotitolo}>

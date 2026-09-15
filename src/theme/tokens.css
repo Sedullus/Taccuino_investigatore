@@ -129,3 +129,52 @@ a:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Vista di stampa (facoltativa, §11): un riepilogo leggibile, senza comandi
+   interattivi. Gli elementi da nascondere portano l'attributo
+   data-print-hide invece di un nome di classe, perché i CSS Module
+   producono nomi con hash non referenziabili da qui. */
+@media print {
+  [data-print-hide] {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  [class*='_pagina_'] {
+    display: block;
+  }
+
+  [class*='_corpo_'] {
+    display: block !important;
+  }
+
+  [class*='_aside_'],
+  [class*='_main_'] {
+    display: block !important;
+    position: static !important;
+    max-height: none !important;
+    overflow: visible !important;
+    width: auto !important;
+    padding: 0 0 12px !important;
+    border: 0 !important;
+  }
+
+  [class*='_pannello_'] {
+    display: none !important;
+  }
+
+  button {
+    color: #000 !important;
+  }
+
+  input,
+  textarea {
+    border: 1px solid #999 !important;
+    color: #000 !important;
+    background: #fff !important;
+  }
+}

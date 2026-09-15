@@ -1,0 +1,79 @@
+.blocco {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.grigliaTrascorsi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sezione {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--colore-bordo);
+  padding-top: 18px;
+}
+
+.rigaLista {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--colore-bordo);
+  min-height: 44px;
+}
+
+.rigaAggiungi {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+}
+
+.rigaDenaroTesta {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.spesaCard {
+  border: 1px solid var(--colore-accento);
+  border-radius: var(--raggio);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.grigliaDenaro {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.rigaCompagno {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--colore-bordo);
+}
+
+.rigaNoteTesta {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}

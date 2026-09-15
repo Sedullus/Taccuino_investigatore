@@ -84,6 +84,12 @@ export function AggiungiAbilitaDialogo({ onChiudi }: Props) {
             </button>
           </div>
         </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button type="button" className={comuni.bottoneTesto} onClick={onChiudi}>
+            Chiudi
+          </button>
+        </div>
       </div>
     </Dialogo>
   );

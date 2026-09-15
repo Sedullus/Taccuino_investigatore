@@ -31,6 +31,20 @@ Tutte le modifiche rilevanti del progetto, organizzate per fase di sviluppo.
 ### Note
 - Fase 3 (Trascorsi, Equipaggiamento, Denaro, Compagni, Note e indizi, ritratto, temi/impostazioni aggiuntive, vista di stampa) non ancora iniziata.
 
+## Fase 3 — Rifinitura
+
+### Aggiunto
+- Vista **Trascorsi**: i dieci campi narrativi (Descrizione Personale, Ideologia/Credo, Persone Importanti, Luoghi Importanti, Oggetti di Valore, Tratti, Ferite e Cicatrici, Fobie e Manie, Tomi Arcani/Incantesimi/Manufatti, Incontri con Entità Strane), Equipaggiamento (lista libera), Denaro (contanti e proprietà modificabili, con suggerimento calcolato dal Valore di Credito esatto e condizione sociale), Compagni investigatori, Note e indizi con pulsante "Segna l'ora".
+- **Ritratto**: caricamento di un'immagine, ridimensionata lato client (canvas, lato massimo 320px) prima di salvarla in IndexedDB — non appesantisce l'export JSON, che continua a contenere solo la chiave del ritratto.
+- **Tema chiaro/scuro**: interruttore Sistema/Chiaro/Scuro nelle Impostazioni (preferenza del dispositivo, salvata in `localStorage`, non nei dati dell'investigatore).
+- **Vista di stampa** (`@media print`): nasconde i comandi interattivi (testata, barra di navigazione, pannello di tiro) e mostra caratteristiche/abilità/derivati su un'unica colonna leggibile.
+- Pulsante "Chiudi" esplicito in tutti i dialoghi che ne erano privi (Impostazioni, Stati, Aggiungi abilità), per chi non sa che il tasto Esc o il clic fuori dal riquadro chiudono comunque.
+- **Pubblicazione su GitHub Pages**: percorsi relativi in `vite.config.ts` (funzionano da qualunque sottopercorso, senza modifiche), flusso `--.github/workflows/deploy-pages.yml` che compila e pubblica automaticamente a ogni push su `main`.
+- `README.md` completo: avvio in locale, installazione su telefono/tablet, backup tramite export/import JSON, pubblicazione passo-passo su GitHub Pages.
+
+### Corretto durante la stesura
+- `vite.config.ts` usava percorsi assoluti (`/icons/...`, `start_url: '/'`) che avrebbero rotto manifest e Service Worker una volta pubblicati in un sottopercorso GitHub Pages (`/nome-repository/`); passati tutti a percorsi relativi.
+
 ## Fase 2 — Al tavolo
 
 ### Aggiunto

@@ -40,6 +40,11 @@ export function StatiDialogo({ onChiudi }: Props) {
           );
         })}
       </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <button type="button" className={comuni.bottoneTesto} onClick={onChiudi}>
+          Chiudi
+        </button>
+      </div>
     </Dialogo>
   );
 }
