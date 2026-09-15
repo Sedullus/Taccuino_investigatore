@@ -47,3 +47,18 @@ export async function salvaRitratto(chiave: string, dataUrl: string): Promise<vo
 export async function leggiRitratto(chiave: string): Promise<string | undefined> {
   return get<string>(`ritratto:${chiave}`, store);
 }
+
+// ── Note manoscritte (§ "Note e indizi"): il disegno a mano libera, come il
+// ritratto, salvato a parte e non incluso nel JSON di export. ──
+
+export async function salvaManoscritto(chiave: string, dataUrl: string): Promise<void> {
+  await set(`manoscritto:${chiave}`, dataUrl, store);
+}
+
+export async function leggiManoscritto(chiave: string): Promise<string | undefined> {
+  return get<string>(`manoscritto:${chiave}`, store);
+}
+
+export async function eliminaManoscritto(chiave: string): Promise<void> {
+  await del(`manoscritto:${chiave}`, store);
+}

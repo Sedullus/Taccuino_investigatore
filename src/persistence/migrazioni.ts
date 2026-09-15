@@ -13,8 +13,14 @@ type PassoMigrazione = (dati: Record<string, unknown>) => Record<string, unknown
  * scheda ricalcola il suggerimento al volo ovunque un'arma non abbia
  * un'icona salvata, quindi non serve scriverla qui dentro i dati.
  */
+/**
+ * 2 → 3: aggiunta del disegno a mano libera delle Note e indizi (campo
+ * `noteManoscritte`, facoltativo, come `icona` in 1 → 2). Nessun dato da
+ * trasformare: le schede più vecchie semplicemente non hanno un disegno.
+ */
 const MIGRAZIONI: Record<number, PassoMigrazione> = {
   1: (dati) => dati,
+  2: (dati) => dati,
 };
 
 export function applicaMigrazioni(dati: Record<string, unknown>, versioneIniziale: number): Record<string, unknown> {

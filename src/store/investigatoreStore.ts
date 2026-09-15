@@ -6,10 +6,12 @@
 import { create } from 'zustand';
 import {
   caricaInvestigatore,
+  eliminaManoscritto,
   elencaInvestigatori,
   eliminaInvestigatore as eliminaInvestigatoreArchivio,
   leggiIdAttivo,
   salvaInvestigatore,
+  salvaManoscritto,
   salvaRitratto,
   scriviIdAttivo,
 } from '../persistence/archivio';
@@ -27,6 +29,7 @@ import {
   ABILITA_NON_COMUNI,
   NON_SPUNTABILI,
   abilitaMancantiPerArmi,
+  abilitaSchedaNuova,
   nomeConSpecializzazione,
 } from '../rules/skills1920';
 import type { Abilita, Arma, Caratteristica, ChiaveOverrideNumerico, Compagno, IconaArma, Investigatore, Trascorsi } from '../rules/types';
@@ -80,7 +83,7 @@ function schedaVuota(id: string): Investigatore {
       folliaIndefinita: false,
       folliaPermanente: false,
     },
-    abilita: [],
+    abilita: abilitaSchedaNuova(),
     armi: [
       {
         id: 'senza-armi',
@@ -224,6 +227,8 @@ interface StatoStore {
   aggiornaNote: (testo: string) => void;
   timbraOraNote: () => void;
   salvaRitrattoInvestigatore: (dataUrl: string) => Promise<void>;
+  salvaNoteManoscritte: (dataUrl: string) => Promise<void>;
+  cancellaNoteManoscritte: () => Promise<void>;
 }
 
 export const useInvestigatoreStore = create<StatoStore>((set, get) => {
@@ -864,6 +869,25 @@ export const useInvestigatoreStore = create<StatoStore>((set, get) => {
       mutaAttivo((b) => {
         b.anagrafica.ritratto = chiave;
       }, 'Ritratto', 'aggiornato');
+    },
+
+    async salvaNoteManoscritte(dataUrl) {
+      const s = get();
+      if (!s.attivo) return;
+      const chiave = s.attivo.id;
+      await salvaManoscritto(chiave, dataUrl);
+      mutaAttivo((b) => {
+        b.noteManoscritte = chiave;
+      });
+    },
+
+    async cancellaNoteManoscritte() {
+      const s = get();
+      if (!s.attivo?.noteManoscritte) return;
+      await eliminaManoscritto(s.attivo.noteManoscritte);
+      mutaAttivo((b) => {
+        b.noteManoscritte = undefined;
+      }, 'Note manoscritte', 'cancellate');
     },
   };
 });

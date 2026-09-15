@@ -49,3 +49,11 @@ L'immagine del ritratto (§11, Fase 3) è salvata in IndexedDB separatamente dal
 ### Unità di visualizzazione della gittata ravvicinata — default
 
 Il calcolo resta sempre in piedi (`DES/5`), come richiesto. Il default dell'**unità mostrata** nell'interfaccia (non specificato dalla specifica) è impostato su "metri", più naturale per chi gioca in italiano. Cambiabile nelle Impostazioni in qualsiasi momento (`impostazioni.unitaDistanza`).
+
+### Precompilazione delle abilità su una scheda nuova
+
+Una scheda nuova (`abilitaSchedaNuova` in `src/rules/skills1920.ts`) parte con tutte le abilità a istanza singola del catalogo, più Schivare, e le tre specializzazioni di mischia/armi da fuoco più comuni (Combattere-Rissa, Armi da Fuoco-Pistola e -Fucile/Shotgun), tutte a valore base — come le caselle già stampate sul modulo cartaceo di riferimento. Le altre abilità a istanza multipla (Arti e Mestieri, Scienza, Lingua, Pilotare, Sopravvivenza…) **non** vengono precompilate con una riga "generica" senza specializzazione: sul modulo cartaceo restano righe bianche da scrivere a mano, e in questa app il modo corretto di aggiungerle resta il pulsante "Aggiungi abilità" (che richiede comunque di scegliere una specializzazione per essere allenabili). Dove cambiarla: `abilitaSchedaNuova` in `src/rules/skills1920.ts`.
+
+### Le note manoscritte non sono incluse nell'export JSON
+
+Stessa scelta del ritratto qui sopra, per lo stesso motivo: il disegno a mano libera delle Note e indizi (§ "Note e indizi") è un'immagine PNG salvata in IndexedDB, referenziata dalla sola chiave in `noteManoscritte`. L'export JSON porta con sé la chiave ma non i byte del disegno. Dove cambiarla: `esportaJSON`/`importaJSON` in `src/persistence/importExport.ts`, includendo il contenuto di `leggiManoscritto`/`salvaManoscritto` (`src/persistence/archivio.ts`).

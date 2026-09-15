@@ -2,6 +2,15 @@
 
 Tutte le modifiche rilevanti del progetto, organizzate per fase di sviluppo.
 
+## Note e indizi come tab a parte, con penna e pagina in stile antico
+
+### Aggiunto
+- **Note e indizi** ha una tab tutta sua (era una sezione dentro Trascorsi), su una pagina con l'aspetto di un foglio antico (colore carta invecchiata, vignettatura, ombra — fisso, indipendente dal tema chiaro/scuro dell'app, come le icone armi).
+- Switch **Tastiera/Penna**: in modalità Tastiera resta il campo di testo di sempre (con "Segna l'ora"); in modalità Penna si disegna a mano libera (mouse, dito, penna touch — eventi Pointer, unificati) con un pulsante "Cancella". Preferenza ricordata tra le sessioni (come il tema).
+- Il disegno è un'immagine PNG salvata in IndexedDB (non nel JSON di export, come il ritratto — vedi `docs/decisioni.md`), referenziata dal nuovo campo facoltativo `noteManoscritte` (`versioneSchema` 2 → 3, migrazione registrata).
+- Una **scheda nuova** parte con le abilità già precompilate a valore base (tutte quelle a istanza singola, Schivare, e Combattere-Rissa/Armi da Fuoco-Pistola/-Fucile-Shotgun), come le caselle già stampate su un modulo cartaceo — prima partiva con l'elenco abilità completamente vuoto. Vedi `abilitaSchedaNuova` in `src/rules/skills1920.ts` e `docs/decisioni.md`.
+- 4 nuovi test automatici per `abilitaSchedaNuova`.
+
 ## Fedeltà visiva al prototipo di design
 
 ### Corretto

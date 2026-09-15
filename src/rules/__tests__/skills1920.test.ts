@@ -8,6 +8,7 @@ import {
   ABILITA_NON_COMUNI,
   NON_SPUNTABILI,
   abilitaMancantiPerArmi,
+  abilitaSchedaNuova,
   nomeConSpecializzazione,
 } from '../skills1920';
 
@@ -93,6 +94,34 @@ describe('skills1920 — catalogo abilità (§4.2)', () => {
     it('ignora un abilitaCollegata che non corrisponde a nessuna voce del catalogo multi-istanza', () => {
       const armi: Arma[] = [armaDiProva('Qualcosa di inventato')];
       expect(abilitaMancantiPerArmi([], armi)).toHaveLength(0);
+    });
+  });
+
+  describe('abilitaSchedaNuova — precompilazione di una scheda nuova', () => {
+    it('include tutte le abilità a istanza singola, a valore base e non allenate', () => {
+      const abilita = abilitaSchedaNuova();
+      for (const voce of ABILITA_BASE) {
+        const trovata = abilita.find((a) => a.nome === voce.nome);
+        expect(trovata).toMatchObject({ base: voce.base, valore: voce.base, spunta: false, preferita: false });
+      }
+    });
+
+    it('include Combattere (Rissa) e le due Armi da Fuoco più comuni, a valore base', () => {
+      const abilita = abilitaSchedaNuova();
+      expect(abilita.find((a) => a.nome === 'Combattere (Rissa)')).toMatchObject({ base: 25, valore: 25 });
+      expect(abilita.find((a) => a.nome === 'Armi da Fuoco (Pistola)')).toMatchObject({ base: 20, valore: 20 });
+      expect(abilita.find((a) => a.nome === 'Armi da Fuoco (Fucile/Shotgun)')).toMatchObject({ base: 25, valore: 25 });
+    });
+
+    it('non include specializzazioni multi-istanza senza un default (es. Arti e Mestieri, Scienza)', () => {
+      const abilita = abilitaSchedaNuova();
+      expect(abilita.some((a) => a.radice === 'Arti e Mestieri')).toBe(false);
+      expect(abilita.some((a) => a.radice === 'Scienza')).toBe(false);
+    });
+
+    it('ogni id è unico', () => {
+      const abilita = abilitaSchedaNuova();
+      expect(new Set(abilita.map((a) => a.id)).size).toBe(abilita.length);
     });
   });
 });

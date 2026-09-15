@@ -27,8 +27,6 @@ export function VistaTrascorsi() {
   const aggiungiCompagno = useInvestigatoreStore((s) => s.aggiungiCompagno);
   const aggiornaCompagno = useInvestigatoreStore((s) => s.aggiornaCompagno);
   const rimuoviCompagno = useInvestigatoreStore((s) => s.rimuoviCompagno);
-  const aggiornaNote = useInvestigatoreStore((s) => s.aggiornaNote);
-  const timbraOraNote = useInvestigatoreStore((s) => s.timbraOraNote);
 
   const [nuovoOggetto, setNuovoOggetto] = useState('');
 
@@ -165,22 +163,6 @@ export function VistaTrascorsi() {
         <button type="button" className={comuni.bottoneTestoAttivo} style={{ alignSelf: 'flex-start' }} onClick={aggiungiCompagno}>
           Aggiungi un compagno
         </button>
-      </div>
-
-      <div className={styles.sezione}>
-        <div className={styles.rigaNoteTesta}>
-          <span className={comuni.etichetta}>NOTE E INDIZI</span>
-          <button type="button" className={comuni.bottoneTesto} onClick={timbraOraNote}>
-            Segna l'ora
-          </button>
-        </div>
-        <textarea
-          className={comuni.input}
-          style={{ minHeight: 200, resize: 'vertical', fontFamily: 'var(--font-prosa)', fontSize: 17, lineHeight: 1.6 }}
-          placeholder="Quello che ho visto stanotte, prima di dimenticarlo."
-          value={attivo.note}
-          onChange={(e) => aggiornaNote(e.target.value)}
-        />
       </div>
     </div>
   );

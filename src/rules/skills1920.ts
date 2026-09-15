@@ -135,6 +135,50 @@ export function nomeConSpecializzazione(radice: string, specializzazione?: strin
   return specializzazione ? `${radice} (${specializzazione})` : radice;
 }
 
+/** Id leggibile e stabile da un nome visualizzato: "Arti e Mestieri (Fotografia)" → "arti-e-mestieri-fotografia". */
+export function slugAbilita(nome: string): string {
+  return nome
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+function abilitaAValoreBase(radice: string, base: number, specializzazione?: string): Abilita {
+  const nome = nomeConSpecializzazione(radice, specializzazione);
+  return {
+    id: slugAbilita(nome),
+    nome,
+    radice,
+    specializzazione,
+    base,
+    valore: base,
+    spunta: false,
+    preferita: false,
+    nonSpuntabile: NON_SPUNTABILI.has(radice),
+  };
+}
+
+/**
+ * Le abilità con cui parte una scheda nuova (§4.2): tutte le abilità a
+ * istanza singola, più le tre specializzazioni di mischia/armi da fuoco più
+ * comuni — come le caselle già stampate sul modulo cartaceo, pronte per
+ * essere allenate. Le altre abilità a istanza multipla (Arti e Mestieri,
+ * Scienza, Lingua, Pilotare, Sopravvivenza…) restano da aggiungere a mano
+ * con una specializzazione scelta, dal pulsante "Aggiungi abilità": senza
+ * una specializzazione non sono comunque allenabili.
+ */
+export function abilitaSchedaNuova(): Abilita[] {
+  return [
+    ...ABILITA_BASE.map((v) => abilitaAValoreBase(v.nome, v.base)),
+    abilitaAValoreBase('Schivare', 0),
+    abilitaAValoreBase(ETICHETTA_MISCHIA, 25, 'Rissa'),
+    abilitaAValoreBase(ETICHETTA_ARMI_FUOCO, 20, 'Pistola'),
+    abilitaAValoreBase(ETICHETTA_ARMI_FUOCO, 25, 'Fucile/Shotgun'),
+  ];
+}
+
 function vociMultiIstanzaPerNome(nome: string): { radice: string; specializzazione?: string; base: number } | undefined {
   for (const [radice, voci] of Object.entries(ABILITA_MULTI_ISTANZA)) {
     const voce = voci.find((v) => nomeConSpecializzazione(radice, v.nome) === nome);

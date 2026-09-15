@@ -4,6 +4,7 @@ import { VistaStato } from './components/stato/VistaStato';
 import { VistaAbilita } from './components/abilita/VistaAbilita';
 import { VistaCombattimento } from './components/combattimento/VistaCombattimento';
 import { VistaTrascorsi } from './components/trascorsi/VistaTrascorsi';
+import { VistaNote } from './components/note/VistaNote';
 import { VistaRegistro } from './components/registro/VistaRegistro';
 import { VistaSviluppo } from './components/sviluppo/VistaSviluppo';
 import { VistaInvestigatori } from './components/investigatori/VistaInvestigatori';
@@ -19,13 +20,14 @@ import styles from './components/layout/Shell.module.css';
 
 type Vista = 'scheda' | 'investigatori';
 type TabMobile = 'stato' | 'main';
-type TabContenuto = 'abilita' | 'combattimento' | 'trascorsi' | 'registro' | 'sviluppo';
+type TabContenuto = 'abilita' | 'combattimento' | 'trascorsi' | 'note' | 'registro' | 'sviluppo';
 type Dialogo = 'danno' | 'sanita' | 'impostazioni' | 'stati' | null;
 
 const TAB_CONTENUTO: { valore: TabContenuto; nome: string }[] = [
   { valore: 'abilita', nome: 'Abilità' },
   { valore: 'combattimento', nome: 'Combattimento' },
   { valore: 'trascorsi', nome: 'Trascorsi' },
+  { valore: 'note', nome: 'Note e indizi' },
   { valore: 'registro', nome: 'Registro' },
   { valore: 'sviluppo', nome: 'Fine scenario' },
 ];
@@ -91,6 +93,7 @@ export function App() {
           {tab === 'abilita' && <VistaAbilita />}
           {tab === 'combattimento' && <VistaCombattimento />}
           {tab === 'trascorsi' && <VistaTrascorsi />}
+          {tab === 'note' && <VistaNote />}
           {tab === 'registro' && <VistaRegistro />}
           {tab === 'sviluppo' && <VistaSviluppo />}
         </main>

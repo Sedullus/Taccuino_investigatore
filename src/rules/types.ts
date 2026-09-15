@@ -167,6 +167,8 @@ export interface Investigatore {
   denaro: Denaro;
   compagni: Compagno[];
   note: string;
+  /** Chiave del disegno a mano libera delle Note e indizi in IndexedDB (§ "Note e indizi"); assente = nessun disegno. Non incluso nell'export JSON, come il ritratto. */
+  noteManoscritte?: string;
   registro: VoceRegistro[];
   impostazioni: Impostazioni;
 }

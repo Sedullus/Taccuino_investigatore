@@ -4,23 +4,14 @@
 // con quelli del brief (verificato), a riprova che le formule sono corrette.
 
 import { schivareBase } from '../rules/derived';
-import { ABILITA_BASE, ETICHETTA_ARMI_FUOCO, ETICHETTA_MISCHIA, NON_SPUNTABILI, nomeConSpecializzazione } from '../rules/skills1920';
+import { ABILITA_BASE, ETICHETTA_ARMI_FUOCO, ETICHETTA_MISCHIA, NON_SPUNTABILI, nomeConSpecializzazione, slugAbilita } from '../rules/skills1920';
 import type { Abilita, Arma, Investigatore } from '../rules/types';
 import { VERSIONE_SCHEMA_CORRENTE } from '../persistence/schema';
-
-function slug(nome: string): string {
-  return nome
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-}
 
 function abilita(radice: string, base: number, valore: number, specializzazione?: string): Abilita {
   const nome = nomeConSpecializzazione(radice, specializzazione);
   return {
-    id: slug(nome),
+    id: slugAbilita(nome),
     nome,
     radice,
     specializzazione,
