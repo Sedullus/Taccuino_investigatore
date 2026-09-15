@@ -1,7 +1,32 @@
 // Catalogo abilità anni '20 [MB] §4.2 — non numerato tra i 43 casi, ma coperto
 // per rispettare "ogni regola marcata [RI]/[MB] ha almeno un test".
 import { describe, expect, it } from 'vitest';
-import { ABILITA_BASE, ABILITA_MULTI_ISTANZA, ABILITA_NON_COMUNI, NON_SPUNTABILI, nomeConSpecializzazione } from '../skills1920';
+import type { Abilita, Arma } from '../types';
+import {
+  ABILITA_BASE,
+  ABILITA_MULTI_ISTANZA,
+  ABILITA_NON_COMUNI,
+  NON_SPUNTABILI,
+  abilitaMancantiPerArmi,
+  nomeConSpecializzazione,
+} from '../skills1920';
+
+function armaDiProva(abilitaCollegata: string): Arma {
+  return {
+    id: 'x',
+    nome: 'Arma di prova',
+    abilitaCollegata,
+    danno: '1D6',
+    tipo: 'contundente',
+    bdMode: 'completo',
+    gittataBase: 'contatto',
+    attacchiPerRound: 1,
+    caricatore: 0,
+    munizioni: 0,
+    malfunzionamento: 100,
+    inceppata: false,
+  };
+}
 
 describe('skills1920 — catalogo abilità (§4.2)', () => {
   it('valori base di riferimento', () => {
@@ -35,5 +60,39 @@ describe('skills1920 — catalogo abilità (§4.2)', () => {
   it('le abilità non comuni includono Artiglieria e Ipnosi', () => {
     expect(ABILITA_NON_COMUNI.some((a) => a.nome === 'Artiglieria')).toBe(true);
     expect(ABILITA_NON_COMUNI.some((a) => a.nome === 'Ipnosi')).toBe(true);
+  });
+
+  describe('abilitaMancantiPerArmi — riconciliazione armi/abilità', () => {
+    it('propone Armi da Fuoco (Fucile/Shotgun) a base 25 se un arma la richiede e non è sulla scheda', () => {
+      const abilita: Abilita[] = [];
+      const armi: Arma[] = [armaDiProva('Armi da Fuoco (Fucile/Shotgun)')];
+      const mancanti = abilitaMancantiPerArmi(abilita, armi);
+      expect(mancanti).toHaveLength(1);
+      expect(mancanti[0]).toMatchObject({
+        nome: 'Armi da Fuoco (Fucile/Shotgun)',
+        radice: 'Armi da Fuoco',
+        specializzazione: 'Fucile/Shotgun',
+        base: 25,
+        valore: 25,
+      });
+    });
+
+    it('non propone nulla se l\'abilità collegata è già sulla scheda', () => {
+      const abilita: Abilita[] = [
+        { id: '1', nome: 'Combattere (Rissa)', radice: 'Combattere', specializzazione: 'Rissa', base: 25, valore: 25, spunta: false, preferita: false, nonSpuntabile: false },
+      ];
+      const armi: Arma[] = [armaDiProva('Combattere (Rissa)')];
+      expect(abilitaMancantiPerArmi(abilita, armi)).toHaveLength(0);
+    });
+
+    it('non duplica se più armi condividono la stessa abilità mancante', () => {
+      const armi: Arma[] = [armaDiProva('Armi da Fuoco (Pistola)'), armaDiProva('Armi da Fuoco (Pistola)')];
+      expect(abilitaMancantiPerArmi([], armi)).toHaveLength(1);
+    });
+
+    it('ignora un abilitaCollegata che non corrisponde a nessuna voce del catalogo multi-istanza', () => {
+      const armi: Arma[] = [armaDiProva('Qualcosa di inventato')];
+      expect(abilitaMancantiPerArmi([], armi)).toHaveLength(0);
+    });
   });
 });

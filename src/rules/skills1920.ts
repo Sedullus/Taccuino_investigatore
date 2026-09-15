@@ -2,6 +2,8 @@
 // Valore di Credito §4.3. Le etichette stanno tutte qui, in un unico posto:
 // una correzione futura della dicitura ufficiale è una modifica di una riga sola.
 
+import type { Abilita, Arma } from './types';
+
 export const ETICHETTA_MISCHIA = 'Combattere';
 export const ETICHETTA_ARMI_FUOCO = 'Armi da Fuoco';
 
@@ -131,4 +133,43 @@ export const ABILITA_NON_COMUNI: readonly VoceCatalogo[] = [
 /** Nome visualizzato di un'abilità con specializzazione: "Arti e Mestieri (Fotografia)". */
 export function nomeConSpecializzazione(radice: string, specializzazione?: string): string {
   return specializzazione ? `${radice} (${specializzazione})` : radice;
+}
+
+function vociMultiIstanzaPerNome(nome: string): { radice: string; specializzazione?: string; base: number } | undefined {
+  for (const [radice, voci] of Object.entries(ABILITA_MULTI_ISTANZA)) {
+    const voce = voci.find((v) => nomeConSpecializzazione(radice, v.nome) === nome);
+    if (voce) return { radice, specializzazione: voce.nome, base: voce.base };
+  }
+  return undefined;
+}
+
+/**
+ * Ogni arma collegata a un'abilità deve trovare quell'abilità sulla scheda
+ * (altrimenti scompare dai bottoni ABILITÀ e non si vede il valore
+ * collegato): restituisce le abilità mancanti da aggiungere a valore base,
+ * derivandole dal catalogo tramite `arma.abilitaCollegata`. Pura: non
+ * modifica l'elenco ricevuto.
+ */
+export function abilitaMancantiPerArmi(abilita: readonly Abilita[], armi: readonly Arma[]): Abilita[] {
+  const esistenti = new Set(abilita.map((a) => a.nome));
+  const mancanti: Abilita[] = [];
+  for (const arma of armi) {
+    const nome = arma.abilitaCollegata;
+    if (!nome || esistenti.has(nome)) continue;
+    const voce = vociMultiIstanzaPerNome(nome);
+    if (!voce) continue;
+    esistenti.add(nome);
+    mancanti.push({
+      id: crypto.randomUUID(),
+      nome,
+      radice: voce.radice,
+      specializzazione: voce.specializzazione,
+      base: voce.base,
+      valore: voce.base,
+      spunta: false,
+      preferita: false,
+      nonSpuntabile: NON_SPUNTABILI.has(voce.radice),
+    });
+  }
+  return mancanti;
 }

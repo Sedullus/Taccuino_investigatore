@@ -26,6 +26,7 @@ import {
   ABILITA_MULTI_ISTANZA,
   ABILITA_NON_COMUNI,
   NON_SPUNTABILI,
+  abilitaMancantiPerArmi,
   nomeConSpecializzazione,
 } from '../rules/skills1920';
 import type { Abilita, Arma, Caratteristica, ChiaveOverrideNumerico, Compagno, IconaArma, Investigatore, Trascorsi } from '../rules/types';
@@ -36,6 +37,16 @@ import { creaTiro, type TiroInCorso } from './tiro';
 
 function iconaSuggeritaPer(nome: string, abilitaCollegata: string): IconaArma | undefined {
   return iconaEffettivaArma(nome, abilitaCollegata, undefined);
+}
+
+// Ripara schede (caricate da IndexedDB o importate) dove un'arma è collegata
+// a un'abilità di catalogo non ancora presente sulla scheda: capita con dati
+// creati prima che il modulo "Metto a verbale una nuova arma" aggiungesse in
+// automatico l'abilità scelta. Non tocca nulla se non serve.
+function riconciliaAbilitaArmi(investigatore: Investigatore): Investigatore {
+  const mancanti = abilitaMancantiPerArmi(investigatore.abilita, investigatore.armi);
+  if (mancanti.length === 0) return investigatore;
+  return { ...investigatore, abilita: [...investigatore.abilita, ...mancanti] };
 }
 
 const LIMITE_UNDO = 20;
@@ -301,15 +312,19 @@ export const useInvestigatoreStore = create<StatoStore>((set, get) => {
           salvati = [adele];
         }
         const idAttivo = (await leggiIdAttivo()) ?? salvati[0]?.id;
-        const attivo = salvati.find((i) => i.id === idAttivo) ?? salvati[0] ?? null;
+        const trovato = salvati.find((i) => i.id === idAttivo) ?? salvati[0] ?? null;
+        const attivo = trovato ? riconciliaAbilitaArmi(trovato) : null;
+        if (attivo && attivo !== trovato) await salvaInvestigatore(attivo);
         set({ elenco: salvati.map(voceElencoDi), attivo, caricato: true });
       })();
       await promessaInit;
     },
 
     async selezionaScheda(id) {
-      const investigatore = await caricaInvestigatore(id);
-      if (!investigatore) return;
+      const caricato = await caricaInvestigatore(id);
+      if (!caricato) return;
+      const investigatore = riconciliaAbilitaArmi(caricato);
+      if (investigatore !== caricato) await salvaInvestigatore(investigatore);
       await scriviIdAttivo(id);
       set({
         attivo: investigatore,
@@ -356,7 +371,7 @@ export const useInvestigatoreStore = create<StatoStore>((set, get) => {
         set({ erroreImportMessaggio: risultato.errore });
         return false;
       }
-      const importato: Investigatore = { ...risultato.investigatore, id: nuovoId() };
+      const importato: Investigatore = riconciliaAbilitaArmi({ ...risultato.investigatore, id: nuovoId() });
       await salvaInvestigatore(importato);
       await scriviIdAttivo(importato.id);
       set((s) => ({ elenco: [...s.elenco, voceElencoDi(importato)], attivo: importato, undoStack: [], erroreImportMessaggio: null }));
