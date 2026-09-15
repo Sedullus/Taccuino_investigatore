@@ -18,6 +18,16 @@ const NOMI_CONDIZIONI: Record<keyof Investigatore['condizioni'], string> = {
   folliaPermanente: 'Follia Permanente',
 };
 
+const CAMPI_ANAGRAFICA: { chiave: keyof Investigatore['anagrafica']; etichetta: string; tipo?: 'number' }[] = [
+  { chiave: 'nome', etichetta: 'NOME' },
+  { chiave: 'giocatore', etichetta: 'GIOCATORE' },
+  { chiave: 'professione', etichetta: 'PROFESSIONE' },
+  { chiave: 'eta', etichetta: 'ETÀ', tipo: 'number' },
+  { chiave: 'sesso', etichetta: 'SESSO' },
+  { chiave: 'residenza', etichetta: 'RESIDENZA' },
+  { chiave: 'luogoNascita', etichetta: 'NASCITA' },
+];
+
 const DERIVATI_NUMERICI: { chiave: ChiaveOverrideNumerico; etichetta: string }[] = [
   { chiave: 'struttura', etichetta: 'STR' },
   { chiave: 'mov', etichetta: 'MOV' },
@@ -34,6 +44,7 @@ interface Props {
 export function VistaStato({ onApriDanno, onApriSanita }: Props) {
   const attivo = useInvestigatoreStore((s) => s.attivo);
   const modalita = useInvestigatoreStore((s) => s.modalita);
+  const aggiornaAnagrafica = useInvestigatoreStore((s) => s.aggiornaAnagrafica);
   const aggiornaCaratteristica = useInvestigatoreStore((s) => s.aggiornaCaratteristica);
   const aggiornaOverride = useInvestigatoreStore((s) => s.aggiornaOverride);
   const aggiornaOverrideBD = useInvestigatoreStore((s) => s.aggiornaOverrideBD);
@@ -89,13 +100,37 @@ export function VistaStato({ onApriDanno, onApriSanita }: Props) {
           {attivo.anagrafica.nome.slice(0, 1)}
         </button>
         <input ref={inputFile} type="file" accept="image/*" style={{ display: 'none' }} onChange={suFileScelto} />
-        <div className={styles.datiAnagrafici}>
-          <span className={styles.nome}>{attivo.anagrafica.nome}</span>
-          <span className={styles.sottotitolo}>
-            {[attivo.anagrafica.professione, attivo.anagrafica.eta ? `${attivo.anagrafica.eta} anni` : ''].filter(Boolean).join(' · ')}
-          </span>
-        </div>
+        {gioco ? (
+          <div className={styles.datiAnagrafici}>
+            <span className={styles.nome}>{attivo.anagrafica.nome}</span>
+            <span className={styles.sottotitolo}>
+              {[attivo.anagrafica.professione, attivo.anagrafica.eta ? `${attivo.anagrafica.eta} anni` : ''].filter(Boolean).join(' · ')}
+            </span>
+          </div>
+        ) : (
+          <div className={styles.datiAnagrafici}>
+            <span className={styles.nome}>{attivo.anagrafica.nome || 'Nuovo investigatore'}</span>
+          </div>
+        )}
       </div>
+
+      {!gioco && (
+        <div className={styles.campiAnagrafica}>
+          {CAMPI_ANAGRAFICA.map(({ chiave, etichetta, tipo }) => (
+            <div key={chiave} className={styles.rigaCampo}>
+              <span className={`${comuni.etichetta} ${styles.etichettaCampo}`}>{etichetta}</span>
+              <input
+                className={comuni.input}
+                type={tipo ?? 'text'}
+                value={attivo.anagrafica[chiave] ?? ''}
+                onChange={(e) =>
+                  aggiornaAnagrafica({ [chiave]: tipo === 'number' ? Math.max(0, parseInt(e.target.value, 10) || 0) : e.target.value })
+                }
+              />
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className={comuni.card} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 16 }}>
         <Tracker etichetta="PF" valore={attivo.risorse.pf} massimo={derivati.pfMax} onMeno={() => deltaRisorsa('pf', -1, derivati.pfMax)} onPiu={() => deltaRisorsa('pf', 1, derivati.pfMax)} />

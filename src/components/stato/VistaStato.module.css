@@ -45,6 +45,23 @@
   color: var(--colore-testo-attenuato);
 }
 
+.campiAnagrafica {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rigaCampo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.etichettaCampo {
+  width: 90px;
+  flex: none;
+}
+
 .azioniRisorse {
   display: flex;
   gap: 16px;
