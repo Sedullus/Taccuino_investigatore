@@ -48,11 +48,8 @@ export function VistaStato({ onApriDanno, onApriSanita }: Props) {
 
   useEffect(() => {
     let annullato = false;
-    if (!chiaveRitratto) {
-      setRitrattoUrl(null);
-      return;
-    }
-    void leggiRitratto(chiaveRitratto).then((url) => {
+    const promessa = chiaveRitratto ? leggiRitratto(chiaveRitratto) : Promise.resolve(undefined);
+    void promessa.then((url) => {
       if (!annullato) setRitrattoUrl(url ?? null);
     });
     return () => {
