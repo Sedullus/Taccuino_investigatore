@@ -19,6 +19,19 @@
   --colore-pericolo: #a3402f;
   --colore-pericolo-testo: #8a3527;
 
+  /* Icone armi, stile incisione (§2 "Icone delle armi in stile inciso"):
+     una lastra scura e calda con contorno chiaro, indipendente dal tema
+     chiaro/scuro dell'app — è l'identità visiva dell'icona stessa, come
+     un'incisione reale non cambia aspetto con la luce della stanza. Il
+     bordo della lastra usa --colore-bordo-forte (quello sì, sensibile al
+     tema) così l'icona si stacca sempre dallo sfondo attorno. */
+  --icona-fondo: #2b2015;
+  --icona-fondo-chiaro: #3d2f1c;
+  --icona-corpo: #5a4530;
+  --icona-contorno: #e8dcc0;
+  --icona-tratto: #8a6f4a;
+  --icona-accento: #b8733c;
+
   --font-ui: 'Archivo Narrow', system-ui, sans-serif;
   --font-cifre: 'IBM Plex Mono', ui-monospace, monospace;
   --font-prosa: 'Source Serif 4', Georgia, serif;
