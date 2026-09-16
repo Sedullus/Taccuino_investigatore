@@ -4,7 +4,7 @@
 import { z } from 'zod';
 import { CARATTERISTICHE } from '../rules/types';
 
-export const VERSIONE_SCHEMA_CORRENTE = 3;
+export const VERSIONE_SCHEMA_CORRENTE = 4;
 
 const caratteristicheSchema = z.object(
   Object.fromEntries(CARATTERISTICHE.map((c) => [c, z.number()])) as Record<(typeof CARATTERISTICHE)[number], z.ZodNumber>,
@@ -116,6 +116,29 @@ const voceRegistroSchema = z.object({
   dopo: z.record(z.string(), z.union([z.number(), z.string(), z.boolean()])).optional(),
 });
 
+const immagineNotaSchema = z.object({
+  id: z.string(),
+  chiave: z.string(),
+  didascalia: z.string().optional(),
+});
+
+const sessioneAvventuraSchema = z.object({
+  id: z.string(),
+  titolo: z.string(),
+  data: z.string(),
+  luogo: z.string(),
+  testo: z.string(),
+  immagini: z.array(immagineNotaSchema),
+  creata: z.string(),
+});
+
+const avventuraSchema = z.object({
+  id: z.string(),
+  titolo: z.string(),
+  sessioni: z.array(sessioneAvventuraSchema),
+  creata: z.string(),
+});
+
 const impostazioniSchema = z.object({
   spesaFortuna: z.boolean(),
   dadiFisici: z.boolean(),
@@ -138,6 +161,7 @@ export const investigatoreSchema = z.object({
   compagni: z.array(compagnoSchema),
   note: z.string(),
   noteManoscritte: z.string().optional(),
+  avventure: z.array(avventuraSchema).optional(),
   registro: z.array(voceRegistroSchema),
   impostazioni: impostazioniSchema,
 });

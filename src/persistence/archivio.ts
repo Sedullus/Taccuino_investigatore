@@ -62,3 +62,18 @@ export async function leggiManoscritto(chiave: string): Promise<string | undefin
 export async function eliminaManoscritto(chiave: string): Promise<void> {
   await del(`manoscritto:${chiave}`, store);
 }
+
+// ── Immagini del Taccuino delle avventure: come il ritratto e le note
+// manoscritte, salvate a parte e non incluse nel JSON di export. ──
+
+export async function salvaImmagineTaccuino(chiave: string, dataUrl: string): Promise<void> {
+  await set(`taccuino-immagine:${chiave}`, dataUrl, store);
+}
+
+export async function leggiImmagineTaccuino(chiave: string): Promise<string | undefined> {
+  return get<string>(`taccuino-immagine:${chiave}`, store);
+}
+
+export async function eliminaImmagineTaccuino(chiave: string): Promise<void> {
+  await del(`taccuino-immagine:${chiave}`, store);
+}
