@@ -65,3 +65,15 @@ Il Taccuino (Avventura → Sessioni, ciascuna con titolo, data di gioco, luogo, 
 Le immagini di ogni sessione seguono esattamente lo stesso pattern del ritratto e delle note manoscritte (voci qui sopra): salvate in IndexedDB una per una (`salvaImmagineTaccuino`/`leggiImmagineTaccuino`/`eliminaImmagineTaccuino` in `src/persistence/archivio.ts`), referenziate dalla sola chiave in `ImmagineNota.chiave`. L'export JSON porta con sé le chiavi ma non i byte: importando la scheda su un altro dispositivo, le foto vanno riaggiunte a mano. Stessa scelta deliberata, per lo stesso motivo (backup piccolo e leggibile) — dove cambiarla: `esportaJSON`/`importaJSON` in `src/persistence/importExport.ts`, includendo il contenuto di `leggiImmagineTaccuino` per ogni immagine referenziata nelle sessioni.
 
 Eliminare una sessione o un'intera avventura elimina anche i byte delle sue immagini da IndexedDB (loop su `immagini` prima della mutazione, in `src/store/investigatoreStore.ts`); duplicare una scheda (`duplicaScheda`) no — condivide le chiavi con l'originale finché non si tocca un'immagine, esattamente come già succede oggi per ritratto e note manoscritte.
+
+### Dettatura vocale nel racconto della sessione: l'unica chiamata di rete a runtime, ed è facoltativa
+
+Il pulsante **Detta** accanto al racconto della sessione (`src/hooks/useDettatura.ts`, usato da `VistaTaccuino.tsx`) usa la Web Speech API del browser (`SpeechRecognition`/`webkitSpeechRecognition`). Su Chrome e Edge questa API **non gira sul dispositivo**: l'audio viene inviato ai server di Google per il riconoscimento — l'unico punto di tutta l'app in cui i dati escono dal dispositivo a runtime, in contrasto diretto con la promessa "nessuna chiamata di rete" del README.
+
+**Scelta adottata:** procedere comunque, ma con due vincoli non negoziabili:
+1. **Mai attivo di default.** Il pulsante avvia il riconoscimento solo su un'azione esplicita dell'utente ("Detta"), e si può interrompere in ogni momento ("Interrompi dettatura"). Nessun microfono acceso in background.
+2. **Sempre facoltativo e isolato.** Il pulsante compare solo se il browser espone l'API (feature detection in `costruttoreDisponibile`); su un browser senza supporto (es. Firefox desktop) la sezione Racconto resta identica a prima, senza alcuna differenza visibile. Nessun'altra parte dell'app dipende da questa funzione.
+
+**Perché non un'alternativa offline:** non esiste, ad oggi, un'API standard del browser per il riconoscimento vocale interamente on-device e universalmente supportata — il comportamento (locale o via server) dipende dal motore del browser e non è controllabile dall'app. L'alternativa "zero rete" resta la dettatura già offerta dalla tastiera del sistema operativo (Gboard, iOS, Windows), che funziona su qualunque campo di testo dell'app senza bisogno di questo pulsante.
+
+**Dove cambiarla:** `src/hooks/useDettatura.ts` (il motore usato) e il pulsante in `src/components/taccuino/VistaTaccuino.tsx`. Solo il racconto della sessione ha il pulsante; titolo/data/luogo della sessione e titolo dell'avventura restano solo tastiera, per scelta esplicita (sono campi brevi, dove la dettatura aiuta meno).

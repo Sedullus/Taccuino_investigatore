@@ -1,6 +1,6 @@
 # Taccuino dell'Investigatore
 
-Una scheda investigatore digitale, pensata per giocare al tavolo a un gioco di ruolo investigativo anni '20 con un sistema basato su percentuali. Funziona **offline**, non ha un account, e **tutti i dati restano sul dispositivo** (IndexedDB del browser) — non c'è alcun server, alcuna sincronizzazione, alcuna chiamata di rete a runtime.
+Una scheda investigatore digitale, pensata per giocare al tavolo a un gioco di ruolo investigativo anni '20 con un sistema basato su percentuali. Funziona **offline**, non ha un account, e **tutti i dati restano sul dispositivo** (IndexedDB del browser) — non c'è alcun server, alcuna sincronizzazione, alcuna chiamata di rete a runtime, con un'unica eccezione facoltativa: il pulsante "Detta" nel Taccuino delle avventure usa il riconoscimento vocale del browser, che su Chrome/Edge invia l'audio ai server di Google (mai attivo di default — vedi [`docs/decisioni.md`](docs/decisioni.md)).
 
 Le regole implementate e le scelte di modellazione sono documentate in [`docs/regole-scheda-7e.md`](docs/regole-scheda-7e.md) (fonte di verità) e [`docs/decisioni.md`](docs/decisioni.md) (i punti ambigui e come sono stati risolti). Lo storico delle fasi di sviluppo è in [`CHANGELOG.md`](CHANGELOG.md). Le icone delle armi usano sagome di terze parti con licenza aperta: l'attribuzione è in [`LICENSES.md`](LICENSES.md) e nella schermata Crediti dell'app.
 

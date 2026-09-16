@@ -186,6 +186,19 @@
   gap: 6px;
 }
 
+.barraRacconto {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.suggerimentoDettatura {
+  margin: -8px 0 0;
+  font-size: 13px;
+  color: var(--colore-testo-debole);
+}
+
 /* Il racconto della sessione resta sulla stessa pagina color carta invecchiata
    delle Note e indizi (§ VistaNote.module.css): stessa identità visiva per
    ogni scrittura libera del taccuino, a prescindere dal tema chiaro/scuro. */
