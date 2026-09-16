@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useInvestigatoreStore } from '../../store/investigatoreStore';
 import { leggiImmagineTaccuino } from '../../persistence/archivio';
 import { ridimensionaImmagine } from '../../utils/immagine';
+import { useDettatura } from '../../hooks/useDettatura';
 import { Dialogo } from '../comuni/Dialogo';
 import type { ImmagineNota } from '../../rules/types';
 import comuni from '../../theme/comuni.module.css';
@@ -35,10 +36,25 @@ export function VistaTaccuino() {
   const [immagineAperta, setImmagineAperta] = useState<ImmagineNota | null>(null);
   const inputFile = useRef<HTMLInputElement>(null);
 
-  if (!attivo) return null;
-  const avventure = attivo.avventure ?? [];
+  const avventure = attivo?.avventure ?? [];
   const avventuraCorrente = avventure.find((a) => a.id === avventuraId) ?? null;
   const sessioneCorrente = avventuraCorrente?.sessioni.find((s) => s.id === sessioneId) ?? null;
+
+  const dettatura = useDettatura((testoRiconosciuto) => {
+    if (!avventuraCorrente || !sessioneCorrente) return;
+    const base = sessioneCorrente.testo;
+    const separatore = base && !/\s$/.test(base) ? ' ' : '';
+    aggiornaSessione(avventuraCorrente.id, sessioneCorrente.id, { testo: base + separatore + testoRiconosciuto });
+  });
+
+  // Cambiare sessione interrompe una dettatura in corso: altrimenti il testo
+  // riconosciuto finirebbe nella sessione appena aperta, non in quella letta ad alta voce.
+  const interrompiDettatura = dettatura.interrompi;
+  useEffect(() => {
+    interrompiDettatura();
+  }, [sessioneCorrente?.id, interrompiDettatura]);
+
+  if (!attivo) return null;
 
   function selezionaAvventura(id: string) {
     setAvventuraId(id === avventuraId ? null : id);
@@ -197,6 +213,18 @@ export function VistaTaccuino() {
               </div>
             </div>
 
+            <div className={styles.barraRacconto} data-print-hide>
+              <span className={comuni.etichetta}>RACCONTO</span>
+              {dettatura.supportata && (
+                <button
+                  type="button"
+                  className={dettatura.inAscolto ? comuni.bottoneTestoPericolo : comuni.bottoneTesto}
+                  onClick={() => (dettatura.inAscolto ? dettatura.interrompi() : dettatura.avvia())}
+                >
+                  {dettatura.inAscolto ? 'Interrompi dettatura' : 'Detta'}
+                </button>
+              )}
+            </div>
             <div className={styles.paginaAntica}>
               <textarea
                 className={styles.testoRacconto}
@@ -205,6 +233,7 @@ export function VistaTaccuino() {
                 onChange={(e) => aggiornaSessione(avventuraCorrente.id, sessioneCorrente.id, { testo: e.target.value })}
               />
             </div>
+            {dettatura.inAscolto && <p className={styles.suggerimentoDettatura}>In ascolto… il testo riconosciuto viene aggiunto in fondo al racconto.</p>}
 
             <div className={styles.sezioneImmagini}>
               <span className={comuni.etichetta}>IMMAGINI</span>
