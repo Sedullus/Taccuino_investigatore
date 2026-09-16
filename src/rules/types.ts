@@ -152,6 +152,34 @@ export interface Impostazioni {
   unitaDistanza: 'metri' | 'piedi';
 }
 
+export interface ImmagineNota {
+  id: string;
+  /** Chiave dell'immagine salvata in IndexedDB (stesso pattern del ritratto e delle note manoscritte). Non inclusa nell'export JSON. */
+  chiave: string;
+  didascalia?: string;
+}
+
+export interface SessioneAvventura {
+  id: string;
+  titolo: string;
+  /** Data di gioco, testo libero (i calendari delle campagne non sono tutti ISO). */
+  data: string;
+  luogo: string;
+  /** Racconto/riepilogo della sessione, testo libero. */
+  testo: string;
+  immagini: ImmagineNota[];
+  /** Timestamp ISO di creazione, per ordinare cronologicamente. */
+  creata: string;
+}
+
+export interface Avventura {
+  id: string;
+  titolo: string;
+  sessioni: SessioneAvventura[];
+  /** Timestamp ISO di creazione, per ordinare cronologicamente. */
+  creata: string;
+}
+
 export interface Investigatore {
   id: string;
   versioneSchema: number;
@@ -169,6 +197,8 @@ export interface Investigatore {
   note: string;
   /** Chiave del disegno a mano libera delle Note e indizi in IndexedDB (§ "Note e indizi"); assente = nessun disegno. Non incluso nell'export JSON, come il ritratto. */
   noteManoscritte?: string;
+  /** Taccuino delle avventure (Avventura → Sessioni, con note strutturate e immagini). Facoltativo per compatibilità con schede create prima di versioneSchema 4. */
+  avventure?: Avventura[];
   registro: VoceRegistro[];
   impostazioni: Impostazioni;
 }

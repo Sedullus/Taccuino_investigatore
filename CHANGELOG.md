@@ -2,6 +2,13 @@
 
 Tutte le modifiche rilevanti del progetto, organizzate per fase di sviluppo.
 
+## Taccuino delle avventure: Avventura → Sessioni, con immagini
+
+### Aggiunto
+- Nuova vista **Taccuino**, raggiungibile dalla testata come "Investigatori": tiene traccia delle avventure giocate con l'investigatore attivo. Ogni **Avventura** raccoglie le sue **Sessioni**, elencate in una barra laterale sotto l'avventura aperta (creazione/rinomina/eliminazione per entrambe, con conferma per l'eliminazione).
+- Ogni sessione ha note strutturate — titolo, data di gioco, luogo, racconto libero (sulla stessa pagina color carta invecchiata delle Note e indizi) — e una galleria di immagini: si caricano da file, vengono ridimensionate lato client (come il ritratto), e si possono aprire a schermo intero con didascalia modificabile e rimozione.
+- Modello dati: campi `avventure` sull'investigatore e `chiave`/`immagini` sulle sessioni (`versioneSchema` 3 → 4, migrazione registrata, facoltativo come `icona` e `noteManoscritte`). Le immagini sono salvate in IndexedDB e referenziate per chiave, non incluse nell'export JSON — stessa scelta deliberata del ritratto, vedi `docs/decisioni.md`.
+
 ## Note e indizi come tab a parte, con penna e pagina in stile antico
 
 ### Aggiunto

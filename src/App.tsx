@@ -5,6 +5,7 @@ import { VistaAbilita } from './components/abilita/VistaAbilita';
 import { VistaCombattimento } from './components/combattimento/VistaCombattimento';
 import { VistaTrascorsi } from './components/trascorsi/VistaTrascorsi';
 import { VistaNote } from './components/note/VistaNote';
+import { VistaTaccuino } from './components/taccuino/VistaTaccuino';
 import { VistaRegistro } from './components/registro/VistaRegistro';
 import { VistaSviluppo } from './components/sviluppo/VistaSviluppo';
 import { VistaInvestigatori } from './components/investigatori/VistaInvestigatori';
@@ -18,7 +19,7 @@ import { useTema } from './hooks/useTema';
 import comuni from './theme/comuni.module.css';
 import styles from './components/layout/Shell.module.css';
 
-type Vista = 'scheda' | 'investigatori';
+type Vista = 'scheda' | 'investigatori' | 'taccuino';
 type TabMobile = 'stato' | 'main';
 type TabContenuto = 'abilita' | 'combattimento' | 'trascorsi' | 'note' | 'registro' | 'sviluppo';
 type Dialogo = 'danno' | 'sanita' | 'impostazioni' | 'stati' | null;
@@ -57,10 +58,20 @@ export function App() {
   if (vista === 'investigatori' || !attivo) {
     return (
       <div className={styles.pagina}>
-        <Testata vista={vista} setVista={setVista} modalita={modalita} setModalita={setModalita} onApriImpostazioni={() => setDialogo('impostazioni')} mostraAzioniScheda={false} />
+        <Testata vista={vista} setVista={setVista} modalita={modalita} setModalita={setModalita} onApriImpostazioni={() => setDialogo('impostazioni')} mostraAzioniScheda={false} haAttivo={!!attivo} />
         <div style={{ padding: '18px clamp(18px,3vw,34px)' }}>
           <VistaInvestigatori />
         </div>
+        {dialogo === 'impostazioni' && <ImpostazioniDialogo onChiudi={() => setDialogo(null)} tema={tema} setTema={setTema} />}
+      </div>
+    );
+  }
+
+  if (vista === 'taccuino') {
+    return (
+      <div className={styles.pagina}>
+        <Testata vista={vista} setVista={setVista} modalita={modalita} setModalita={setModalita} onApriImpostazioni={() => setDialogo('impostazioni')} mostraAzioniScheda={false} haAttivo />
+        <VistaTaccuino />
         {dialogo === 'impostazioni' && <ImpostazioniDialogo onChiudi={() => setDialogo(null)} tema={tema} setTema={setTema} />}
       </div>
     );
@@ -76,6 +87,7 @@ export function App() {
         onApriImpostazioni={() => setDialogo('impostazioni')}
         onApriStati={() => setDialogo('stati')}
         mostraAzioniScheda
+        haAttivo
       />
 
       <div className={`${styles.corpo} ${tabMobile === 'stato' ? styles.mobileSoloStato : ''}`}>
@@ -179,9 +191,10 @@ interface TestataProps {
   onApriImpostazioni: () => void;
   onApriStati?: () => void;
   mostraAzioniScheda: boolean;
+  haAttivo: boolean;
 }
 
-function Testata({ vista, setVista, modalita, setModalita, onApriImpostazioni, onApriStati, mostraAzioniScheda }: TestataProps) {
+function Testata({ vista, setVista, modalita, setModalita, onApriImpostazioni, onApriStati, mostraAzioniScheda, haAttivo }: TestataProps) {
   const { supportato, attivo: wakeLockAttivo, toggle: toggleWakeLock } = useWakeLock();
 
   return (
@@ -208,6 +221,11 @@ function Testata({ vista, setVista, modalita, setModalita, onApriImpostazioni, o
         <button type="button" className={comuni.bottone} onClick={onApriImpostazioni}>
           Impostazioni
         </button>
+        {haAttivo && (
+          <button type="button" className={comuni.bottone} onClick={() => setVista(vista === 'taccuino' ? 'scheda' : 'taccuino')}>
+            {vista === 'taccuino' ? 'Torna alla scheda' : 'Taccuino'}
+          </button>
+        )}
         <button type="button" className={comuni.bottone} onClick={() => setVista(vista === 'investigatori' ? 'scheda' : 'investigatori')}>
           {vista === 'investigatori' ? 'Torna alla scheda' : 'Investigatori'}
         </button>

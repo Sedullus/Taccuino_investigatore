@@ -6,10 +6,12 @@
 import { create } from 'zustand';
 import {
   caricaInvestigatore,
+  eliminaImmagineTaccuino,
   eliminaManoscritto,
   elencaInvestigatori,
   eliminaInvestigatore as eliminaInvestigatoreArchivio,
   leggiIdAttivo,
+  salvaImmagineTaccuino,
   salvaInvestigatore,
   salvaManoscritto,
   salvaRitratto,
@@ -32,7 +34,7 @@ import {
   abilitaSchedaNuova,
   nomeConSpecializzazione,
 } from '../rules/skills1920';
-import type { Abilita, Arma, Caratteristica, ChiaveOverrideNumerico, Compagno, IconaArma, Investigatore, Trascorsi } from '../rules/types';
+import type { Abilita, Arma, Caratteristica, ChiaveOverrideNumerico, Compagno, IconaArma, Investigatore, SessioneAvventura, Trascorsi } from '../rules/types';
 import { creaAdeleMarchetti } from '../data/adeleMarchetti';
 import { iconaEffettivaArma } from '../icons/suggerimento';
 import { nuovaVoceRegistro } from './registro';
@@ -117,6 +119,7 @@ function schedaVuota(id: string): Investigatore {
     denaro: { livelloSpesa: 0, contanti: 0, proprieta: 0 },
     compagni: [],
     note: '',
+    avventure: [],
     registro: [],
     impostazioni: { spesaFortuna: true, dadiFisici: false, unitaDistanza: 'metri' },
   };
@@ -229,6 +232,18 @@ interface StatoStore {
   salvaRitrattoInvestigatore: (dataUrl: string) => Promise<void>;
   salvaNoteManoscritte: (dataUrl: string) => Promise<void>;
   cancellaNoteManoscritte: () => Promise<void>;
+
+  // ── Taccuino delle avventure: Avventura → Sessioni, con note strutturate
+  // e immagini (§ "Taccuino delle avventure") ─────────────────────────────
+  creaAvventura: (titolo: string) => string;
+  rinominaAvventura: (id: string, titolo: string) => void;
+  eliminaAvventura: (id: string) => Promise<void>;
+  creaSessione: (avventuraId: string, titolo: string) => string;
+  aggiornaSessione: (avventuraId: string, sessioneId: string, patch: Partial<Pick<SessioneAvventura, 'titolo' | 'data' | 'luogo' | 'testo'>>) => void;
+  eliminaSessione: (avventuraId: string, sessioneId: string) => Promise<void>;
+  aggiungiImmagineSessione: (avventuraId: string, sessioneId: string, dataUrl: string) => Promise<void>;
+  aggiornaDidascaliaImmagine: (avventuraId: string, sessioneId: string, immagineId: string, didascalia: string) => void;
+  rimuoviImmagineSessione: (avventuraId: string, sessioneId: string, immagineId: string) => Promise<void>;
 }
 
 export const useInvestigatoreStore = create<StatoStore>((set, get) => {
@@ -888,6 +903,90 @@ export const useInvestigatoreStore = create<StatoStore>((set, get) => {
       mutaAttivo((b) => {
         b.noteManoscritte = undefined;
       }, 'Note manoscritte', 'cancellate');
+    },
+
+    // ── Taccuino delle avventure ─────────────────────────────────────────
+    creaAvventura(titolo) {
+      const id = nuovoId();
+      mutaAttivo((b) => {
+        if (!b.avventure) b.avventure = [];
+        b.avventure.push({ id, titolo, sessioni: [], creata: new Date().toISOString() });
+      }, 'Avventura creata', titolo);
+      return id;
+    },
+
+    rinominaAvventura(id, titolo) {
+      mutaAttivo((b) => {
+        const a = b.avventure?.find((x) => x.id === id);
+        if (a) a.titolo = titolo;
+      });
+    },
+
+    async eliminaAvventura(id) {
+      const avventura = get().attivo?.avventure?.find((a) => a.id === id);
+      if (avventura) {
+        for (const sessione of avventura.sessioni) {
+          for (const img of sessione.immagini) await eliminaImmagineTaccuino(img.chiave);
+        }
+      }
+      mutaAttivo((b) => {
+        b.avventure = (b.avventure ?? []).filter((a) => a.id !== id);
+      }, 'Avventura eliminata', avventura?.titolo ?? '');
+    },
+
+    creaSessione(avventuraId, titolo) {
+      const id = nuovoId();
+      mutaAttivo((b) => {
+        const a = b.avventure?.find((x) => x.id === avventuraId);
+        if (a) a.sessioni.push({ id, titolo, data: '', luogo: '', testo: '', immagini: [], creata: new Date().toISOString() });
+      }, 'Sessione creata', titolo);
+      return id;
+    },
+
+    aggiornaSessione(avventuraId, sessioneId, patch) {
+      mutaAttivo((b) => {
+        const sessione = b.avventure?.find((a) => a.id === avventuraId)?.sessioni.find((s) => s.id === sessioneId);
+        if (sessione) Object.assign(sessione, patch);
+      });
+    },
+
+    async eliminaSessione(avventuraId, sessioneId) {
+      const sessione = get().attivo?.avventure?.find((a) => a.id === avventuraId)?.sessioni.find((s) => s.id === sessioneId);
+      if (sessione) {
+        for (const img of sessione.immagini) await eliminaImmagineTaccuino(img.chiave);
+      }
+      mutaAttivo((b) => {
+        const a = b.avventure?.find((x) => x.id === avventuraId);
+        if (a) a.sessioni = a.sessioni.filter((s) => s.id !== sessioneId);
+      }, 'Sessione eliminata', sessione?.titolo ?? '');
+    },
+
+    async aggiungiImmagineSessione(avventuraId, sessioneId, dataUrl) {
+      const chiave = nuovoId();
+      await salvaImmagineTaccuino(chiave, dataUrl);
+      mutaAttivo((b) => {
+        const sessione = b.avventure?.find((a) => a.id === avventuraId)?.sessioni.find((s) => s.id === sessioneId);
+        if (sessione) sessione.immagini.push({ id: nuovoId(), chiave });
+      }, 'Immagine aggiunta', '');
+    },
+
+    aggiornaDidascaliaImmagine(avventuraId, sessioneId, immagineId, didascalia) {
+      mutaAttivo((b) => {
+        const immagine = b.avventure?.find((a) => a.id === avventuraId)?.sessioni.find((s) => s.id === sessioneId)?.immagini.find((i) => i.id === immagineId);
+        if (immagine) immagine.didascalia = didascalia;
+      });
+    },
+
+    async rimuoviImmagineSessione(avventuraId, sessioneId, immagineId) {
+      const immagine = get()
+        .attivo?.avventure?.find((a) => a.id === avventuraId)
+        ?.sessioni.find((s) => s.id === sessioneId)
+        ?.immagini.find((i) => i.id === immagineId);
+      if (immagine) await eliminaImmagineTaccuino(immagine.chiave);
+      mutaAttivo((b) => {
+        const sessione = b.avventure?.find((a) => a.id === avventuraId)?.sessioni.find((s) => s.id === sessioneId);
+        if (sessione) sessione.immagini = sessione.immagini.filter((i) => i.id !== immagineId);
+      });
     },
   };
 });

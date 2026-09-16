@@ -18,9 +18,17 @@ type PassoMigrazione = (dati: Record<string, unknown>) => Record<string, unknown
  * `noteManoscritte`, facoltativo, come `icona` in 1 → 2). Nessun dato da
  * trasformare: le schede più vecchie semplicemente non hanno un disegno.
  */
+/**
+ * 3 → 4: aggiunta del Taccuino delle avventure (campo `avventure`,
+ * facoltativo — array di Avventura, ciascuna con le proprie Sessioni e le
+ * relative immagini). Stessa storia di `icona` e `noteManoscritte`: nessun
+ * dato da trasformare, le schede più vecchie semplicemente non hanno ancora
+ * nessuna avventura registrata.
+ */
 const MIGRAZIONI: Record<number, PassoMigrazione> = {
   1: (dati) => dati,
   2: (dati) => dati,
+  3: (dati) => dati,
 };
 
 export function applicaMigrazioni(dati: Record<string, unknown>, versioneIniziale: number): Record<string, unknown> {
