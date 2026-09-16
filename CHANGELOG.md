@@ -2,6 +2,12 @@
 
 Tutte le modifiche rilevanti del progetto, organizzate per fase di sviluppo.
 
+## Dettatura vocale nel racconto della sessione
+
+### Aggiunto
+- Pulsante **Detta** accanto al racconto di ogni sessione del Taccuino: usa il riconoscimento vocale del browser (`src/hooks/useDettatura.ts`), in italiano, e aggiunge il testo riconosciuto in fondo al racconto. Compare solo se il browser espone l'API (Firefox desktop, ad esempio, non la ha: in quel caso la sezione resta identica, senza il pulsante).
+- **Unica eccezione** alla regola "nessuna chiamata di rete a runtime" del progetto: su Chrome/Edge il riconoscimento vocale gira sui server di Google, non sul dispositivo. Mai attivo di default, si avvia solo a comando e si interrompe in ogni momento — dettagli e alternative in `docs/decisioni.md`. README aggiornato per segnalare l'eccezione.
+
 ## Taccuino delle avventure: Avventura → Sessioni, con immagini
 
 ### Aggiunto
