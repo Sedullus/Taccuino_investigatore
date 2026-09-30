@@ -5,9 +5,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useInvestigatoreStore } from '../../store/investigatoreStore';
-import { leggiImmagineTaccuino } from '../../persistence/archivio';
+import { leggiChiaveApiAnthropic, leggiImmagineTaccuino } from '../../persistence/archivio';
 import { ridimensionaImmagine } from '../../utils/immagine';
 import { useDettatura } from '../../hooks/useDettatura';
+import { generaPdfSessione, nomeFilePdf } from '../../utils/pdfSessione';
+import { generaRiassunto } from '../../utils/riassuntoAI';
 import { Dialogo } from '../comuni/Dialogo';
 import type { ImmagineNota } from '../../rules/types';
 import comuni from '../../theme/comuni.module.css';
@@ -34,6 +36,8 @@ export function VistaTaccuino() {
   const [avventuraDaEliminare, setAvventuraDaEliminare] = useState<string | null>(null);
   const [sessioneDaEliminare, setSessioneDaEliminare] = useState<string | null>(null);
   const [immagineAperta, setImmagineAperta] = useState<ImmagineNota | null>(null);
+  const [generandoPdf, setGenerandoPdf] = useState(false);
+  const [erroreRiassunto, setErroreRiassunto] = useState<string | null>(null);
   const inputFile = useRef<HTMLInputElement>(null);
 
   const avventure = attivo?.avventure ?? [];
@@ -85,6 +89,45 @@ export function VistaTaccuino() {
     if (!file || !avventuraCorrente || !sessioneCorrente) return;
     const dataUrl = await ridimensionaImmagine(file, LATO_MASSIMO_FOTO);
     await aggiungiImmagineSessione(avventuraCorrente.id, sessioneCorrente.id, dataUrl);
+  }
+
+  async function esportaPdf() {
+    if (!attivo || !avventuraCorrente || !sessioneCorrente) return;
+    setErroreRiassunto(null);
+    setGenerandoPdf(true);
+    try {
+      const foto = await Promise.all(
+        sessioneCorrente.immagini.map(async (img) => ({
+          dataUrl: (await leggiImmagineTaccuino(img.chiave)) ?? '',
+          didascalia: img.didascalia,
+        })),
+      );
+      const fotoValide = foto.filter((f) => f.dataUrl);
+
+      let riassunto: string | undefined;
+      const chiaveApi = await leggiChiaveApiAnthropic();
+      if (chiaveApi && sessioneCorrente.testo.trim()) {
+        try {
+          riassunto = await generaRiassunto(sessioneCorrente.testo, chiaveApi);
+        } catch (err) {
+          setErroreRiassunto(err instanceof Error ? err.message : 'Riassunto AI non disponibile.');
+        }
+      }
+
+      const doc = await generaPdfSessione(attivo, avventuraCorrente, sessioneCorrente, fotoValide, riassunto);
+      const blob = doc.output('blob');
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nomeFilePdf(sessioneCorrente);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } finally {
+      setGenerandoPdf(false);
+    }
   }
 
   return (
@@ -180,10 +223,16 @@ export function VistaTaccuino() {
           <div className={styles.schedaSessione}>
             <div className={styles.intestazioneAvventura}>
               <input value={avventuraCorrente.titolo} onChange={(e) => rinominaAvventura(avventuraCorrente.id, e.target.value)} />
+              <button type="button" className={comuni.bottoneTesto} disabled={generandoPdf} onClick={() => void esportaPdf()}>
+                {generandoPdf ? 'Genero il PDF…' : 'Esporta PDF'}
+              </button>
               <button type="button" className={comuni.bottoneTestoPericolo} onClick={() => setSessioneDaEliminare(sessioneCorrente.id)}>
                 Elimina sessione
               </button>
             </div>
+            {erroreRiassunto && (
+              <p className={styles.suggerimentoDettatura}>Il riassunto AI non è disponibile ({erroreRiassunto}): il PDF è stato generato senza.</p>
+            )}
 
             <div className={styles.campiSessione}>
               <div className={styles.campo}>
