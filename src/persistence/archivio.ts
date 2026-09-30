@@ -77,3 +77,21 @@ export async function leggiImmagineTaccuino(chiave: string): Promise<string | un
 export async function eliminaImmagineTaccuino(chiave: string): Promise<void> {
   await del(`taccuino-immagine:${chiave}`, store);
 }
+
+// ── Chiave API Anthropic (§ "Riassunto AI nel PDF della sessione"): una sola
+// chiave per dispositivo, non legata a un investigatore — mai inclusa
+// nell'export JSON di una scheda (non passa nemmeno per quello schema). ──
+
+const CHIAVE_API_ANTHROPIC = 'impostazione-chiave-api-anthropic';
+
+export async function salvaChiaveApiAnthropic(chiave: string): Promise<void> {
+  await set(CHIAVE_API_ANTHROPIC, chiave, store);
+}
+
+export async function leggiChiaveApiAnthropic(): Promise<string | undefined> {
+  return get<string>(CHIAVE_API_ANTHROPIC, store);
+}
+
+export async function eliminaChiaveApiAnthropic(): Promise<void> {
+  await del(CHIAVE_API_ANTHROPIC, store);
+}

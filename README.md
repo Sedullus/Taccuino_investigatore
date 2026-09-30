@@ -1,6 +1,6 @@
 # Taccuino dell'Investigatore
 
-Una scheda investigatore digitale, pensata per giocare al tavolo a un gioco di ruolo investigativo anni '20 con un sistema basato su percentuali. Funziona **offline**, non ha un account, e **tutti i dati restano sul dispositivo** (IndexedDB del browser) — non c'è alcun server, alcuna sincronizzazione, alcuna chiamata di rete a runtime, con un'unica eccezione facoltativa: il pulsante "Detta" nel Taccuino delle avventure usa il riconoscimento vocale del browser, che su Chrome/Edge invia l'audio ai server di Google (mai attivo di default — vedi [`docs/decisioni.md`](docs/decisioni.md)).
+Una scheda investigatore digitale, pensata per giocare al tavolo a un gioco di ruolo investigativo anni '20 con un sistema basato su percentuali. Funziona **offline**, non ha un account, e **tutti i dati restano sul dispositivo** (IndexedDB del browser) — non c'è alcun server, alcuna sincronizzazione, alcuna chiamata di rete a runtime, con due eccezioni facoltative e mai attive di default (vedi [`docs/decisioni.md`](docs/decisioni.md)): il pulsante "Detta" nel Taccuino delle avventure usa il riconoscimento vocale del browser (su Chrome/Edge invia l'audio ai server di Google), e "Esporta PDF" può includere un riassunto generato dall'AI, solo se hai salvato una tua chiave API Anthropic nelle Impostazioni (il racconto viene inviato ad Anthropic per generarlo).
 
 Le regole implementate e le scelte di modellazione sono documentate in [`docs/regole-scheda-7e.md`](docs/regole-scheda-7e.md) (fonte di verità) e [`docs/decisioni.md`](docs/decisioni.md) (i punti ambigui e come sono stati risolti). Lo storico delle fasi di sviluppo è in [`CHANGELOG.md`](CHANGELOG.md). Le icone delle armi usano sagome di terze parti con licenza aperta: l'attribuzione è in [`LICENSES.md`](LICENSES.md) e nella schermata Crediti dell'app.
 
@@ -77,6 +77,8 @@ Per ripristinare (o passare un investigatore a un altro dispositivo):
 3. Scegli il file `.json` esportato in precedenza.
 
 L'app avvisa se il file non è leggibile (per esempio, se è di una versione più recente dello schema dati) senza toccare l'investigatore che avevi aperto.
+
+La chiave API Anthropic (Impostazioni, per il riassunto AI nel PDF) non fa parte di questo backup: resta solo sul dispositivo dove l'hai inserita, come le immagini del Taccuino e il ritratto.
 
 ## Pubblicazione gratuita su GitHub Pages
 

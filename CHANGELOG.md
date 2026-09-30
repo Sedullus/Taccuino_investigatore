@@ -2,6 +2,13 @@
 
 Tutte le modifiche rilevanti del progetto, organizzate per fase di sviluppo.
 
+## Esporta PDF della sessione, con riassunto AI opzionale
+
+### Aggiunto
+- Pulsante **Esporta PDF** nell'intestazione di ogni sessione del Taccuino: genera un PDF (`src/utils/pdfSessione.ts`, libreria `jsPDF` caricata con `import()` dinamico solo al primo utilizzo) con intestazione, racconto integrale impaginato su più pagine se serve, e le foto allegate in fondo — una per pagina, a piena larghezza, con didascalia. Stile "carta invecchiata", coerente con la pagina del racconto a schermo. Il PDF si apre subito in una nuova scheda e si scarica in automatico.
+- **Riassunto AI facoltativo**: con una chiave API Anthropic salvata nelle Impostazioni, il PDF include anche un breve riassunto generato dal modello Haiku (`src/utils/riassuntoAI.ts`), in una sezione a parte. Mai salvato nel Taccuino (solo nel PDF), rigenerato a ogni esportazione, e se la chiamata fallisce il PDF viene generato comunque, senza bloccare l'esportazione.
+- **Seconda (e ultima, per ora) eccezione** alla regola "nessuna chiamata di rete a runtime", dopo la dettatura: la chiave API resta solo sul dispositivo (mai nell'export JSON della scheda), ma essendo un'app senza server è leggibile da chiunque abbia accesso al browser — limite dichiarato esplicitamente in `docs/decisioni.md`, insieme al motivo della scelta. README aggiornato.
+
 ## Dettatura vocale nel racconto della sessione
 
 ### Aggiunto

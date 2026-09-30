@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useInvestigatoreStore } from '../../store/investigatoreStore';
+import { eliminaChiaveApiAnthropic, leggiChiaveApiAnthropic, salvaChiaveApiAnthropic } from '../../persistence/archivio';
 import type { Tema } from '../../hooks/useTema';
 import { Dialogo } from '../comuni/Dialogo';
 import { CreditiDialogo } from './CreditiDialogo';
@@ -22,6 +23,25 @@ export function ImpostazioniDialogo({ onChiudi, tema, setTema }: Props) {
   const toggleImpostazione = useInvestigatoreStore((s) => s.toggleImpostazione);
   const setUnitaDistanza = useInvestigatoreStore((s) => s.setUnitaDistanza);
   const [creditiAperti, setCreditiAperti] = useState(false);
+  const [chiaveApi, setChiaveApi] = useState('');
+  const [chiaveApiSalvata, setChiaveApiSalvata] = useState(false);
+
+  useEffect(() => {
+    void leggiChiaveApiAnthropic().then((c) => setChiaveApiSalvata(!!c));
+  }, []);
+
+  async function salvaChiave() {
+    const pulita = chiaveApi.trim();
+    if (!pulita) return;
+    await salvaChiaveApiAnthropic(pulita);
+    setChiaveApi('');
+    setChiaveApiSalvata(true);
+  }
+
+  async function rimuoviChiave() {
+    await eliminaChiaveApiAnthropic();
+    setChiaveApiSalvata(false);
+  }
 
   return (
     <Dialogo titolo="Impostazioni" onChiudi={onChiudi}>
@@ -72,6 +92,40 @@ export function ImpostazioniDialogo({ onChiudi, tema, setTema }: Props) {
             </div>
           </>
         )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, borderBottom: '1px solid var(--colore-bordo)', paddingBottom: 16 }}>
+          <span className={comuni.etichetta}>RIASSUNTO AI NEL PDF DELLE SESSIONI</span>
+          <span style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--colore-testo-debole)', maxWidth: '56ch' }}>
+            Con una chiave API Anthropic, "Esporta PDF" nel Taccuino include anche un riassunto generato dall'AI. Unica eccezione, insieme alla dettatura, alla regola
+            "nessuna chiamata di rete a runtime": il racconto viene inviato ad Anthropic per generarlo. La chiave resta solo su questo dispositivo (non nell'export
+            della scheda), ma essendo un'app senza server chiunque abbia accesso al browser può leggerla dagli strumenti sviluppatore — vedi docs/decisioni.md.
+          </span>
+          {chiaveApiSalvata ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <span style={{ fontSize: 15, color: 'var(--colore-testo)' }}>Chiave salvata.</span>
+              <button type="button" className={comuni.bottoneTestoPericolo} onClick={() => void rimuoviChiave()}>
+                Rimuovi
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <input
+                className={comuni.input}
+                style={{ flex: 1, minWidth: 200 }}
+                type="password"
+                placeholder="sk-ant-…"
+                value={chiaveApi}
+                onChange={(e) => setChiaveApi(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void salvaChiave();
+                }}
+              />
+              <button type="button" className={comuni.bottoneTestoAttivo} disabled={!chiaveApi.trim()} onClick={() => void salvaChiave()}>
+                Salva chiave
+              </button>
+            </div>
+          )}
+        </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <button type="button" className={comuni.bottoneTesto} onClick={() => setCreditiAperti(true)}>
