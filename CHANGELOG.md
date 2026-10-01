@@ -2,6 +2,13 @@
 
 Tutte le modifiche rilevanti del progetto, organizzate per fase di sviluppo.
 
+## Riconoscimento dei nomi nel riassunto AI, con ricerca in tutta la cronologia
+
+### Aggiunto
+- Il riassunto AI ora riconosce i nomi propri nel racconto (euristica locale, nessuna chiamata di rete in più) e cerca quegli stessi nomi in **tutte** le sessioni dell'avventura, non solo le ultime 5 incluse come contesto recente: così un PNG introdotto molte sessioni fa viene comunque ricostruito nella sezione PERSONAGGI, con quanto emerso anche in sessioni non recenti.
+- Nuova sezione **LUOGHI E OGGETTI** nel riassunto, con lo stesso trattamento dei PNG: luoghi e oggetti ricorrenti rilevanti, con quanto si sa finora.
+- 5 nuovi test automatici per `estraiCandidatiNome`/`cercaRiferimentiNomi`/`costruisciContestoCompleto`.
+
 ## Contesto delle sessioni precedenti nel riassunto AI, riassunto a sezioni, cronologia esportabile
 
 ### Aggiunto

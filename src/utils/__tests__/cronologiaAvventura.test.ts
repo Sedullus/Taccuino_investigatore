@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { Avventura, SessioneAvventura } from '../../rules/types';
-import { costruisciContestoAvventura, esportaCronologiaMd, nomeFileCronologia } from '../cronologiaAvventura';
+import {
+  cercaRiferimentiNomi,
+  costruisciContestoAvventura,
+  costruisciContestoCompleto,
+  esportaCronologiaMd,
+  estraiCandidatiNome,
+  nomeFileCronologia,
+} from '../cronologiaAvventura';
 
 function sessione(parziale: Partial<SessioneAvventura> & Pick<SessioneAvventura, 'id' | 'creata'>): SessioneAvventura {
   return { titolo: 'Sessione', data: '', luogo: '', testo: '', immagini: [], ...parziale };
@@ -71,5 +78,49 @@ describe('cronologiaAvventura — esportazione .md', () => {
     const nome = nomeFileCronologia({ ...avventura([]), titolo: 'Caccia: il segreto/della casa?' });
     expect(nome).not.toMatch(/[\\/:*?"<>|]/);
     expect(nome.endsWith('.md')).toBe(true);
+  });
+});
+
+describe('cronologiaAvventura — riconoscimento nomi', () => {
+  it('estraiCandidatiNome ignora la prima parola di ogni frase', () => {
+    const candidati = estraiCandidatiNome('Il farmacista si chiama Zadok Allen. Zadok vive vicino al porto.');
+    expect(candidati).toContain('Zadok Allen');
+    expect(candidati).not.toContain('Il');
+  });
+
+  it('estraiCandidatiNome ordina per frequenza e rispetta il limite massimo', () => {
+    const frasi = Array.from({ length: 10 }, (_, i) => `Oggi abbiamo incontrato Marco ${i === 0 ? 'e Luigi' : ''}.`);
+    const candidati = estraiCandidatiNome(frasi.join(' '));
+    expect(candidati[0]).toBe('Marco');
+    expect(candidati.length).toBeLessThanOrEqual(8);
+  });
+
+  it('cercaRiferimentiNomi trova corrispondenze anche in sessioni molto precedenti', () => {
+    const vecchie: SessioneAvventura[] = [];
+    for (let i = 1; i <= 6; i++) {
+      vecchie.push(sessione({ id: `s${i}`, creata: `2024-01-0${i}T00:00:00.000Z`, titolo: `Sessione ${i}`, testo: `Niente di rilevante qui.` }));
+    }
+    vecchie[0] = { ...vecchie[0], testo: 'Abbiamo conosciuto il farmacista Zadok Allen, molto reticente.' };
+    const corrente = sessione({ id: 's7', creata: '2024-01-07T00:00:00.000Z', titolo: 'Sessione 7', testo: 'Zadok Allen ci ha dato un indizio.' });
+
+    const riferimenti = cercaRiferimentiNomi(avventura([...vecchie, corrente]), 's7', ['Zadok Allen']);
+    expect(riferimenti).toContain('Zadok Allen');
+    expect(riferimenti).toContain('reticente');
+  });
+
+  it('cercaRiferimentiNomi è vuoto senza candidati o senza corrispondenze', () => {
+    const s1 = sessione({ id: 's1', creata: '2024-01-01T00:00:00.000Z', testo: 'Racconto senza nomi particolari.' });
+    expect(cercaRiferimentiNomi(avventura([s1]), 's1', [])).toBe('');
+    expect(cercaRiferimentiNomi(avventura([s1]), 's1', ['NomeInesistente'])).toBe('');
+  });
+
+  it('costruisciContestoCompleto unisce il riepilogo recente e i riferimenti trovati', () => {
+    const s1 = sessione({ id: 's1', creata: '2024-01-01T00:00:00.000Z', titolo: 'Arrivo', testo: 'Abbiamo conosciuto Zadok Allen al porto.' });
+    const s2 = sessione({ id: 's2', creata: '2024-01-08T00:00:00.000Z', titolo: 'Ritorno', testo: 'Siamo tornati a cercare Zadok Allen.' });
+
+    const contesto = costruisciContestoCompleto(avventura([s1, s2]), 's2');
+    expect(contesto).toContain('Avanzamento di');
+    expect(contesto).toContain('Riferimenti trovati nella cronologia');
+    expect(contesto).toContain('Zadok Allen');
   });
 });
