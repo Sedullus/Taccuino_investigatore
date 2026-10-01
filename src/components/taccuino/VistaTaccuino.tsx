@@ -10,7 +10,7 @@ import { ridimensionaImmagine } from '../../utils/immagine';
 import { useDettatura } from '../../hooks/useDettatura';
 import { generaPdfSessione, nomeFilePdf } from '../../utils/pdfSessione';
 import { generaRiassunto } from '../../utils/riassuntoAI';
-import { costruisciContestoAvventura, esportaCronologiaMd, nomeFileCronologia } from '../../utils/cronologiaAvventura';
+import { costruisciContestoCompleto, esportaCronologiaMd, nomeFileCronologia } from '../../utils/cronologiaAvventura';
 import { Dialogo } from '../comuni/Dialogo';
 import type { ImmagineNota } from '../../rules/types';
 import comuni from '../../theme/comuni.module.css';
@@ -109,7 +109,7 @@ export function VistaTaccuino() {
       const chiaveApi = await leggiChiaveApiAnthropic();
       if (chiaveApi && sessioneCorrente.testo.trim()) {
         try {
-          const contesto = costruisciContestoAvventura(avventuraCorrente, sessioneCorrente.id);
+          const contesto = costruisciContestoCompleto(avventuraCorrente, sessioneCorrente.id);
           riassunto = await generaRiassunto(sessioneCorrente.testo, chiaveApi, contesto || undefined);
         } catch (err) {
           setErroreRiassunto(err instanceof Error ? err.message : 'Riassunto AI non disponibile.');
