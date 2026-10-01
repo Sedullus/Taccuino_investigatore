@@ -9,6 +9,7 @@
 
 import type { jsPDF } from 'jspdf';
 import type { Avventura, Investigatore, SessioneAvventura } from '../rules/types';
+import { analizzaRiassunto } from './riassuntoAI';
 
 const MARGINE = 20;
 const COLORE_SFONDO: [number, number, number] = [239, 228, 200];
@@ -126,14 +127,24 @@ export async function generaPdfSessione(
     y += 6;
     if (y > doc.internal.pageSize.getHeight() - MARGINE - 20) y = nuovaPagina(doc);
     doc.setFont('times', 'bold');
-    doc.setFontSize(11);
+    doc.setFontSize(13);
     doc.setTextColor(...COLORE_BORDO);
     doc.text('RIASSUNTO (generato dall’AI)', MARGINE, y);
-    y += 7;
-    doc.setFont('times', 'italic');
-    doc.setFontSize(11);
-    doc.setTextColor(...COLORE_TESTO);
-    scriviTestoConPaginazione(doc, riassunto, MARGINE, y, larghezzaUtile, 5.8);
+    y += 8;
+
+    for (const sezione of analizzaRiassunto(riassunto)) {
+      if (y > doc.internal.pageSize.getHeight() - MARGINE - 14) y = nuovaPagina(doc);
+      doc.setFont('times', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(...COLORE_TESTO_ATTENUATO);
+      doc.text(sezione.titolo, MARGINE, y);
+      y += 5.5;
+      doc.setFont('times', 'normal');
+      doc.setFontSize(11);
+      doc.setTextColor(...COLORE_TESTO);
+      y = scriviTestoConPaginazione(doc, sezione.corpo || '—', MARGINE, y, larghezzaUtile, 5.6);
+      y += 4;
+    }
   }
 
   for (const f of foto) {
