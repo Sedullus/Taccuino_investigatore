@@ -10,6 +10,7 @@ import { ridimensionaImmagine } from '../../utils/immagine';
 import { useDettatura } from '../../hooks/useDettatura';
 import { generaPdfSessione, nomeFilePdf } from '../../utils/pdfSessione';
 import { generaRiassunto } from '../../utils/riassuntoAI';
+import { costruisciContestoAvventura, esportaCronologiaMd, nomeFileCronologia } from '../../utils/cronologiaAvventura';
 import { Dialogo } from '../comuni/Dialogo';
 import type { ImmagineNota } from '../../rules/types';
 import comuni from '../../theme/comuni.module.css';
@@ -108,7 +109,8 @@ export function VistaTaccuino() {
       const chiaveApi = await leggiChiaveApiAnthropic();
       if (chiaveApi && sessioneCorrente.testo.trim()) {
         try {
-          riassunto = await generaRiassunto(sessioneCorrente.testo, chiaveApi);
+          const contesto = costruisciContestoAvventura(avventuraCorrente, sessioneCorrente.id);
+          riassunto = await generaRiassunto(sessioneCorrente.testo, chiaveApi, contesto || undefined);
         } catch (err) {
           setErroreRiassunto(err instanceof Error ? err.message : 'Riassunto AI non disponibile.');
         }
@@ -128,6 +130,20 @@ export function VistaTaccuino() {
     } finally {
       setGenerandoPdf(false);
     }
+  }
+
+  function esportaCronologia() {
+    if (!avventuraCorrente) return;
+    const md = esportaCronologiaMd(avventuraCorrente);
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nomeFileCronologia(avventuraCorrente);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -214,6 +230,11 @@ export function VistaTaccuino() {
           <div className={styles.vuoto}>
             <div className={styles.intestazioneAvventura} style={{ marginBottom: 8 }}>
               <input value={avventuraCorrente.titolo} onChange={(e) => rinominaAvventura(avventuraCorrente.id, e.target.value)} />
+              {avventuraCorrente.sessioni.length > 0 && (
+                <button type="button" className={comuni.bottoneTesto} onClick={esportaCronologia}>
+                  Esporta cronologia (.md)
+                </button>
+              )}
             </div>
             <div className={styles.vuotoTesto}>Scegli una sessione qui a fianco, o creane una nuova per iniziare a scrivere.</div>
           </div>
@@ -223,6 +244,9 @@ export function VistaTaccuino() {
           <div className={styles.schedaSessione}>
             <div className={styles.intestazioneAvventura}>
               <input value={avventuraCorrente.titolo} onChange={(e) => rinominaAvventura(avventuraCorrente.id, e.target.value)} />
+              <button type="button" className={comuni.bottoneTesto} onClick={esportaCronologia}>
+                Esporta cronologia (.md)
+              </button>
               <button type="button" className={comuni.bottoneTesto} disabled={generandoPdf} onClick={() => void esportaPdf()}>
                 {generandoPdf ? 'Genero il PDF…' : 'Esporta PDF'}
               </button>

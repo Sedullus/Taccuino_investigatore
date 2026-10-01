@@ -2,6 +2,14 @@
 
 Tutte le modifiche rilevanti del progetto, organizzate per fase di sviluppo.
 
+## Contesto delle sessioni precedenti nel riassunto AI, riassunto a sezioni, cronologia esportabile
+
+### Aggiunto
+- Il riassunto AI nel PDF ora tiene conto di quello che è già successo nell'avventura: `costruisciContestoAvventura` (`src/utils/cronologiaAvventura.ts`) ricostruisce al volo, dalle sessioni già scritte nel Taccuino, il contesto delle sessioni precedenti (le ultime 5 per intero, le più vecchie solo come titolo/data/luogo) e lo allega al prompt. Nessuno stato "mantenuto" dall'AI: sempre ricostruito dai dati reali, mai da un riassunto precedente, per evitare derive.
+- Il riassunto AI è ora **a sezioni** — NARRAZIONE, INDIZI, PERSONAGGI, FILONI APERTI — invece di un paragrafo unico, più utile da rileggere prima della sessione successiva. Se l'AI non rispetta il formato, il PDF mostra comunque tutto il testo sotto un'unica sezione "RIASSUNTO".
+- Nuovo pulsante **"Esporta cronologia (.md)"** nell'intestazione di ogni avventura: scarica un file Markdown con tutte le sessioni dell'avventura per intero, in ordine cronologico — un diario leggibile della campagna, utile anche fuori dall'app.
+- 9 nuovi test automatici (`src/utils/__tests__/cronologiaAvventura.test.ts`, `riassuntoAI.test.ts`) per la costruzione del contesto, l'esportazione della cronologia e l'analisi delle sezioni del riassunto.
+
 ## Esporta PDF della sessione, con riassunto AI opzionale
 
 ### Aggiunto
