@@ -39,6 +39,7 @@ export function VistaTaccuino() {
   const [immagineAperta, setImmagineAperta] = useState<ImmagineNota | null>(null);
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const [erroreRiassunto, setErroreRiassunto] = useState<string | null>(null);
+  const [errorePdf, setErrorePdf] = useState<string | null>(null);
   const inputFile = useRef<HTMLInputElement>(null);
 
   const avventure = attivo?.avventure ?? [];
@@ -95,7 +96,19 @@ export function VistaTaccuino() {
   async function esportaPdf() {
     if (!attivo || !avventuraCorrente || !sessioneCorrente) return;
     setErroreRiassunto(null);
+    setErrorePdf(null);
     setGenerandoPdf(true);
+    // Apre subito una scheda vuota, nello stesso istante del click: se
+    // window.open() arriva solo dopo aver atteso la chiamata al riassunto
+    // AI (anche solo un paio di secondi), molti browser non la collegano
+    // più al click originale e la bloccano in silenzio come popup. Qui
+    // navighiamo questa stessa scheda quando il PDF è pronto.
+    const finestra = window.open('', '_blank');
+    if (finestra) {
+      finestra.document.title = "Taccuino dell'Investigatore";
+      finestra.document.body.style.cssText = 'font-family: sans-serif; padding: 40px; color: #444;';
+      finestra.document.body.textContent = 'Generazione del PDF in corso…';
+    }
     try {
       const foto = await Promise.all(
         sessioneCorrente.immagini.map(async (img) => ({
@@ -124,7 +137,11 @@ export function VistaTaccuino() {
       const doc = await generaPdfSessione(attivo, avventuraCorrente, sessioneCorrente, fotoValide, riassunto, notaRiassunto);
       const blob = doc.output('blob');
       const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
+      if (finestra && !finestra.closed) {
+        finestra.location.href = url;
+      } else {
+        window.open(url, '_blank');
+      }
       const a = document.createElement('a');
       a.href = url;
       a.download = nomeFilePdf(sessioneCorrente);
@@ -132,6 +149,12 @@ export function VistaTaccuino() {
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      const messaggio = err instanceof Error ? err.message : 'Errore sconosciuto durante la generazione del PDF.';
+      setErrorePdf(messaggio);
+      if (finestra && !finestra.closed) {
+        finestra.document.body.textContent = `Generazione del PDF non riuscita: ${messaggio}`;
+      }
     } finally {
       setGenerandoPdf(false);
     }
@@ -262,6 +285,7 @@ export function VistaTaccuino() {
             {erroreRiassunto && (
               <p className={styles.suggerimentoDettatura}>Il riassunto AI non è disponibile ({erroreRiassunto}): il PDF è stato generato senza.</p>
             )}
+            {errorePdf && <p className={styles.suggerimentoDettatura}>Generazione del PDF non riuscita: {errorePdf}</p>}
 
             <div className={styles.campiSessione}>
               <div className={styles.campo}>
