@@ -40,9 +40,11 @@ export function costruisciContestoAvventura(avventura: Avventura, sessioneCorren
 /** Cronologia completa dell'avventura per l'esportazione .md: tutte le sessioni per intero, in ordine cronologico. */
 export function esportaCronologiaMd(avventura: Avventura): string {
   const ordinate = sessioniInOrdine(avventura);
-  if (ordinate.length === 0) return `# ${avventura.titolo}\n\n_(nessuna sessione ancora registrata)_\n`;
+  const note = avventura.noteCorrezioni?.trim();
+  const intestazione = note ? `# ${avventura.titolo}\n\n## Appunti e correzioni\n\n${note}` : `# ${avventura.titolo}`;
+  if (ordinate.length === 0) return `${intestazione}\n\n_(nessuna sessione ancora registrata)_\n`;
   const voci = ordinate.map((s) => voceSessione(s, true));
-  return `# ${avventura.titolo}\n\n${voci.join('\n\n---\n\n')}\n`;
+  return `${intestazione}\n\n${voci.join('\n\n---\n\n')}\n`;
 }
 
 export function nomeFileCronologia(avventura: Avventura): string {
@@ -131,16 +133,25 @@ export function cercaRiferimentiNomi(avventura: Avventura, sessioneCorrenteId: s
   return `# Riferimenti trovati nella cronologia per nomi ricorrenti\n\n${blocchi.join('\n\n')}`;
 }
 
+function formattaNoteCorrezioni(avventura: Avventura): string {
+  const note = avventura.noteCorrezioni?.trim();
+  if (!note) return '';
+  return `# Appunti e correzioni dell'investigatore (fonte autorevole)\n\nScritti a mano da chi gioca per correggere o chiarire fatti sull'avventura: se in conflitto con qualunque altro materiale qui sotto (racconto delle sessioni, riferimenti trovati automaticamente), fidati di questi appunti.\n\n${note}`;
+}
+
 /**
- * Contesto completo per il riassunto AI: il riepilogo delle sessioni
- * recenti (`costruisciContestoAvventura`) più i riferimenti trovati in
- * tutta la cronologia per i nomi ricorrenti nel racconto della sessione
- * corrente (`cercaRiferimentiNomi`). Quello che usa `VistaTaccuino.tsx`.
+ * Contesto completo per il riassunto AI: gli appunti e correzioni curati a
+ * mano (`formattaNoteCorrezioni`, se presenti, come materiale prioritario),
+ * il riepilogo delle sessioni recenti (`costruisciContestoAvventura`), più
+ * i riferimenti trovati in tutta la cronologia per i nomi ricorrenti nel
+ * racconto della sessione corrente (`cercaRiferimentiNomi`). Quello che usa
+ * `VistaTaccuino.tsx`.
  */
 export function costruisciContestoCompleto(avventura: Avventura, sessioneCorrenteId: string, limiteSessioniComplete = 5): string {
+  const noteCorrezioni = formattaNoteCorrezioni(avventura);
   const contestoRecente = costruisciContestoAvventura(avventura, sessioneCorrenteId, limiteSessioniComplete);
   const sessioneCorrente = avventura.sessioni.find((s) => s.id === sessioneCorrenteId);
   const candidati = sessioneCorrente ? estraiCandidatiNome(sessioneCorrente.testo) : [];
   const riferimenti = cercaRiferimentiNomi(avventura, sessioneCorrenteId, candidati);
-  return [contestoRecente, riferimenti].filter(Boolean).join('\n\n');
+  return [noteCorrezioni, contestoRecente, riferimenti].filter(Boolean).join('\n\n');
 }

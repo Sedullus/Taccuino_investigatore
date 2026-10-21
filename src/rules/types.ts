@@ -178,6 +178,15 @@ export interface Avventura {
   sessioni: SessioneAvventura[];
   /** Timestamp ISO di creazione, per ordinare cronologicamente. */
   creata: string;
+  /**
+   * Appunti e correzioni curati a mano (§ "Appunti e correzioni
+   * dell'avventura"): fatti certi sull'avventura che l'utente vuole
+   * far prevalere sul resto del contesto nel riassunto AI, per
+   * correggere confusioni dell'euristica sui nomi o della ricostruzione
+   * automatica. Facoltativo per compatibilità con le avventure create
+   * prima di questo campo.
+   */
+  noteCorrezioni?: string;
 }
 
 export interface Investigatore {

@@ -115,3 +115,15 @@ Finché mancava una chiave API Anthropic nelle Impostazioni, `esportaPdf` (`Vist
 **Scelta adottata:** il PDF stesso porta sempre la spiegazione, non solo l'interfaccia. `generaPdfSessione` accetta un `notaRiassunto` facoltativo, mostrato in corsivo al posto della sezione RIASSUNTO quando non c'è un riassunto da mostrare: "Riassunto AI non incluso: nessuna chiave API Anthropic salvata nelle Impostazioni." se manca la chiave, "Riassunto AI non riuscito: «messaggio d'errore»" se la chiamata fallisce. Chi riapre il PDF più tardi — anche su un altro dispositivo, anche molto dopo — capisce subito cosa è successo, senza dover ricordare o aver notato un avviso ormai sparito dall'app.
 
 **Dove cambiarla:** il blocco `else if (notaRiassunto)` in `src/utils/pdfSessione.ts`; i due messaggi sono composti in `esportaPdf`, `src/components/taccuino/VistaTaccuino.tsx`.
+
+### Appunti e correzioni dell'avventura: l'unico stato "di fiducia" che l'utente può far prevalere sul resto
+
+Segnalato un riassunto AI con inesattezze (probabile confusione tra personaggi, complice l'euristica di `estraiCandidatiNome` — vedi la voce qui sopra, che accetta esplicitamente falsi positivi come conseguenza). La richiesta: poter correggere a mano cosa l'AI "sa" per il futuro.
+
+**Perché non "rendere modificabile il file .md esportato":** `esportaCronologiaMd` produce un'istantanea calcolata al momento del download, non un documento salvato — modificarla dopo il download non avrebbe alcun effetto su nulla, il file scaricato è già scollegato dai dati dell'app. Per essere "utile" come richiesto, una correzione deve vivere *dentro* il Taccuino e venire riletta a ogni riassunto.
+
+**Scelta adottata:** un nuovo campo per avventura, `Avventura.noteCorrezioni` (`versioneSchema` 4 → 5, migrazione registrata, facoltativo come tutti i campi aggiunti finora), editabile in un dialogo dedicato ("Appunti avventura", `VistaTaccuino.tsx`) — un normale textarea, non uno stato gestito dall'AI. In `costruisciContestoCompleto` (`src/utils/cronologiaAvventura.ts`) questi appunti vengono anteposti a tutto il resto del contesto, sotto l'etichetta esplicita "Appunti e correzioni dell'investigatore (fonte autorevole)", con un'istruzione diretta nel prompt di sistema (`riassuntoAI.ts`) di fidarsene in caso di conflitto con qualunque altro materiale. Compaiono anche in cima a `esportaCronologiaMd`, prima delle sessioni.
+
+Questa è l'unica fonte di "verità aggiuntiva" sull'avventura che non sia il racconto scritto sessione per sessione — ma resta comunque scritta a mano dall'utente, mai generata dall'AI: coerente con la scelta, già presa per il contesto del riassunto, di non avere mai uno stato che l'AI aggiorna da sola (vedi "Contesto delle sessioni precedenti nel riassunto AI" più sopra).
+
+**Dove cambiarla:** `aggiornaNoteCorrezioniAvventura` in `src/store/investigatoreStore.ts`, il dialogo in `VistaTaccuino.tsx`, `formattaNoteCorrezioni` in `src/utils/cronologiaAvventura.ts`.

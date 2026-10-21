@@ -4,7 +4,7 @@
 import { z } from 'zod';
 import { CARATTERISTICHE } from '../rules/types';
 
-export const VERSIONE_SCHEMA_CORRENTE = 4;
+export const VERSIONE_SCHEMA_CORRENTE = 5;
 
 const caratteristicheSchema = z.object(
   Object.fromEntries(CARATTERISTICHE.map((c) => [c, z.number()])) as Record<(typeof CARATTERISTICHE)[number], z.ZodNumber>,
@@ -137,6 +137,7 @@ const avventuraSchema = z.object({
   titolo: z.string(),
   sessioni: z.array(sessioneAvventuraSchema),
   creata: z.string(),
+  noteCorrezioni: z.string().optional(),
 });
 
 const impostazioniSchema = z.object({

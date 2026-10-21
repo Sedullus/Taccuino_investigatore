@@ -22,6 +22,7 @@ export function VistaTaccuino() {
   const attivo = useInvestigatoreStore((s) => s.attivo);
   const creaAvventura = useInvestigatoreStore((s) => s.creaAvventura);
   const rinominaAvventura = useInvestigatoreStore((s) => s.rinominaAvventura);
+  const aggiornaNoteCorrezioniAvventura = useInvestigatoreStore((s) => s.aggiornaNoteCorrezioniAvventura);
   const eliminaAvventura = useInvestigatoreStore((s) => s.eliminaAvventura);
   const creaSessione = useInvestigatoreStore((s) => s.creaSessione);
   const aggiornaSessione = useInvestigatoreStore((s) => s.aggiornaSessione);
@@ -39,6 +40,8 @@ export function VistaTaccuino() {
   const [immagineAperta, setImmagineAperta] = useState<ImmagineNota | null>(null);
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const [erroreRiassunto, setErroreRiassunto] = useState<string | null>(null);
+  const [errorePdf, setErrorePdf] = useState<string | null>(null);
+  const [appuntiAperti, setAppuntiAperti] = useState(false);
   const inputFile = useRef<HTMLInputElement>(null);
 
   const avventure = attivo?.avventure ?? [];
@@ -95,7 +98,19 @@ export function VistaTaccuino() {
   async function esportaPdf() {
     if (!attivo || !avventuraCorrente || !sessioneCorrente) return;
     setErroreRiassunto(null);
+    setErrorePdf(null);
     setGenerandoPdf(true);
+    // Apre subito una scheda vuota, nello stesso istante del click: se
+    // window.open() arriva solo dopo aver atteso la chiamata al riassunto
+    // AI (anche solo un paio di secondi), molti browser non la collegano
+    // più al click originale e la bloccano in silenzio come popup. Qui
+    // navighiamo questa stessa scheda quando il PDF è pronto.
+    const finestra = window.open('', '_blank');
+    if (finestra) {
+      finestra.document.title = "Taccuino dell'Investigatore";
+      finestra.document.body.style.cssText = 'font-family: sans-serif; padding: 40px; color: #444;';
+      finestra.document.body.textContent = 'Generazione del PDF in corso…';
+    }
     try {
       const foto = await Promise.all(
         sessioneCorrente.immagini.map(async (img) => ({
@@ -124,7 +139,11 @@ export function VistaTaccuino() {
       const doc = await generaPdfSessione(attivo, avventuraCorrente, sessioneCorrente, fotoValide, riassunto, notaRiassunto);
       const blob = doc.output('blob');
       const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
+      if (finestra && !finestra.closed) {
+        finestra.location.href = url;
+      } else {
+        window.open(url, '_blank');
+      }
       const a = document.createElement('a');
       a.href = url;
       a.download = nomeFilePdf(sessioneCorrente);
@@ -132,6 +151,12 @@ export function VistaTaccuino() {
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      const messaggio = err instanceof Error ? err.message : 'Errore sconosciuto durante la generazione del PDF.';
+      setErrorePdf(messaggio);
+      if (finestra && !finestra.closed) {
+        finestra.document.body.textContent = `Generazione del PDF non riuscita: ${messaggio}`;
+      }
     } finally {
       setGenerandoPdf(false);
     }
@@ -235,6 +260,9 @@ export function VistaTaccuino() {
           <div className={styles.vuoto}>
             <div className={styles.intestazioneAvventura} style={{ marginBottom: 8 }}>
               <input value={avventuraCorrente.titolo} onChange={(e) => rinominaAvventura(avventuraCorrente.id, e.target.value)} />
+              <button type="button" className={comuni.bottoneTesto} onClick={() => setAppuntiAperti(true)}>
+                Appunti avventura
+              </button>
               {avventuraCorrente.sessioni.length > 0 && (
                 <button type="button" className={comuni.bottoneTesto} onClick={esportaCronologia}>
                   Esporta cronologia (.md)
@@ -249,6 +277,9 @@ export function VistaTaccuino() {
           <div className={styles.schedaSessione}>
             <div className={styles.intestazioneAvventura}>
               <input value={avventuraCorrente.titolo} onChange={(e) => rinominaAvventura(avventuraCorrente.id, e.target.value)} />
+              <button type="button" className={comuni.bottoneTesto} onClick={() => setAppuntiAperti(true)}>
+                Appunti avventura
+              </button>
               <button type="button" className={comuni.bottoneTesto} onClick={esportaCronologia}>
                 Esporta cronologia (.md)
               </button>
@@ -262,6 +293,7 @@ export function VistaTaccuino() {
             {erroreRiassunto && (
               <p className={styles.suggerimentoDettatura}>Il riassunto AI non è disponibile ({erroreRiassunto}): il PDF è stato generato senza.</p>
             )}
+            {errorePdf && <p className={styles.suggerimentoDettatura}>Generazione del PDF non riuscita: {errorePdf}</p>}
 
             <div className={styles.campiSessione}>
               <div className={styles.campo}>
@@ -387,6 +419,29 @@ export function VistaTaccuino() {
             setImmagineAperta(null);
           }}
         />
+      )}
+
+      {appuntiAperti && avventuraCorrente && (
+        <Dialogo titolo="Appunti e correzioni dell'avventura" onChiudi={() => setAppuntiAperti(false)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <p style={{ color: 'var(--colore-testo-attenuato)', margin: 0, fontSize: 14, lineHeight: 1.5 }}>
+              Fatti certi che vuoi far prevalere nel riassunto AI: nomi corretti, chi è davvero chi, chiarimenti su qualunque confusione. Hanno sempre la priorità sul
+              resto del contesto (racconto delle sessioni, riferimenti trovati automaticamente).
+            </p>
+            <textarea
+              className={comuni.input}
+              style={{ minHeight: 160, resize: 'vertical' }}
+              placeholder="Es. «Zadok Allen è il farmacista, non il barista — il barista si chiama Ezra.»"
+              value={avventuraCorrente.noteCorrezioni ?? ''}
+              onChange={(e) => aggiornaNoteCorrezioniAvventura(avventuraCorrente.id, e.target.value)}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button type="button" className={comuni.bottoneTesto} onClick={() => setAppuntiAperti(false)}>
+                Chiudi
+              </button>
+            </div>
+          </div>
+        </Dialogo>
       )}
     </div>
   );
