@@ -106,17 +106,22 @@ export function VistaTaccuino() {
       const fotoValide = foto.filter((f) => f.dataUrl);
 
       let riassunto: string | undefined;
+      let notaRiassunto: string | undefined;
       const chiaveApi = await leggiChiaveApiAnthropic();
-      if (chiaveApi && sessioneCorrente.testo.trim()) {
+      if (!chiaveApi) {
+        notaRiassunto = 'Riassunto AI non incluso: nessuna chiave API Anthropic salvata nelle Impostazioni.';
+      } else if (sessioneCorrente.testo.trim()) {
         try {
           const contesto = costruisciContestoCompleto(avventuraCorrente, sessioneCorrente.id);
           riassunto = await generaRiassunto(sessioneCorrente.testo, chiaveApi, contesto || undefined);
         } catch (err) {
-          setErroreRiassunto(err instanceof Error ? err.message : 'Riassunto AI non disponibile.');
+          const messaggio = err instanceof Error ? err.message : 'Riassunto AI non disponibile.';
+          setErroreRiassunto(messaggio);
+          notaRiassunto = `Riassunto AI non riuscito: ${messaggio}`;
         }
       }
 
-      const doc = await generaPdfSessione(attivo, avventuraCorrente, sessioneCorrente, fotoValide, riassunto);
+      const doc = await generaPdfSessione(attivo, avventuraCorrente, sessioneCorrente, fotoValide, riassunto, notaRiassunto);
       const blob = doc.output('blob');
       const url = URL.createObjectURL(blob);
       window.open(url, '_blank');

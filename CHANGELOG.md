@@ -2,6 +2,11 @@
 
 Tutte le modifiche rilevanti del progetto, organizzate per fase di sviluppo.
 
+## Il PDF dichiara sempre se e perché manca il riassunto AI
+
+### Corretto
+- Senza una chiave API Anthropic salvata, o se la chiamata falliva, il PDF usciva identico al racconto senza nessuna traccia del motivo — l'unico avviso era un piccolo messaggio in-app, facile da non notare subito dopo che parte il download. Ora il PDF stesso include sempre una nota al posto del riassunto: "Riassunto AI non incluso: nessuna chiave API Anthropic salvata nelle Impostazioni" o "Riassunto AI non riuscito: «errore»" — leggibile anche riaprendo il PDF più tardi, non solo nell'istante dell'esportazione.
+
 ## Riconoscimento dei nomi nel riassunto AI, con ricerca in tutta la cronologia
 
 ### Aggiunto

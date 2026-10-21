@@ -70,6 +70,7 @@ export async function generaPdfSessione(
   sessione: SessioneAvventura,
   foto: FotoPdf[],
   riassunto?: string,
+  notaRiassunto?: string,
 ): Promise<jsPDF> {
   const { jsPDF: Costruttore } = await import('jspdf');
   const doc = new Costruttore({ unit: 'mm', format: 'a4' });
@@ -145,6 +146,16 @@ export async function generaPdfSessione(
       y = scriviTestoConPaginazione(doc, sezione.corpo || '—', MARGINE, y, larghezzaUtile, 5.6);
       y += 4;
     }
+  } else if (notaRiassunto) {
+    // Il PDF dichiara sempre, nero su carta invecchiata, se e perché manca il
+    // riassunto AI: un messaggio in-app che sparisce dopo il download non
+    // basta, chi riapre il PDF più tardi deve poterlo capire comunque.
+    y += 6;
+    if (y > doc.internal.pageSize.getHeight() - MARGINE - 16) y = nuovaPagina(doc);
+    doc.setFont('times', 'italic');
+    doc.setFontSize(10);
+    doc.setTextColor(...COLORE_TESTO_ATTENUATO);
+    scriviTestoConPaginazione(doc, notaRiassunto, MARGINE, y, larghezzaUtile, 5.2);
   }
 
   for (const f of foto) {
