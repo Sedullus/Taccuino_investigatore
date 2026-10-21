@@ -2,6 +2,13 @@
 
 Tutte le modifiche rilevanti del progetto, organizzate per fase di sviluppo.
 
+## Appunti e correzioni dell'avventura, con priorità nel riassunto AI
+
+### Aggiunto
+- Nuovo pulsante **"Appunti avventura"** nell'intestazione di ogni avventura: apre un dialogo per scrivere appunti e correzioni a mano (nomi corretti, chi è davvero chi, chiarimenti su confusioni) — campo `Avventura.noteCorrezioni`, `versioneSchema` 4→5.
+- Questi appunti hanno **sempre la priorità** sul resto del contesto quando si genera il riassunto AI di una sessione: inclusi nel prompt come "fonte autorevole", con un'istruzione esplicita di fidarsene in caso di conflitto col racconto o coi riferimenti trovati automaticamente. Compaiono anche in cima a "Esporta cronologia (.md)".
+- 3 nuovi test automatici per le funzioni pure coinvolte.
+
 ## Il PDF dichiara sempre se e perché manca il riassunto AI
 
 ### Corretto

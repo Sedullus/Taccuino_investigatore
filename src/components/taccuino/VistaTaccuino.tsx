@@ -22,6 +22,7 @@ export function VistaTaccuino() {
   const attivo = useInvestigatoreStore((s) => s.attivo);
   const creaAvventura = useInvestigatoreStore((s) => s.creaAvventura);
   const rinominaAvventura = useInvestigatoreStore((s) => s.rinominaAvventura);
+  const aggiornaNoteCorrezioniAvventura = useInvestigatoreStore((s) => s.aggiornaNoteCorrezioniAvventura);
   const eliminaAvventura = useInvestigatoreStore((s) => s.eliminaAvventura);
   const creaSessione = useInvestigatoreStore((s) => s.creaSessione);
   const aggiornaSessione = useInvestigatoreStore((s) => s.aggiornaSessione);
@@ -40,6 +41,7 @@ export function VistaTaccuino() {
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const [erroreRiassunto, setErroreRiassunto] = useState<string | null>(null);
   const [errorePdf, setErrorePdf] = useState<string | null>(null);
+  const [appuntiAperti, setAppuntiAperti] = useState(false);
   const inputFile = useRef<HTMLInputElement>(null);
 
   const avventure = attivo?.avventure ?? [];
@@ -258,6 +260,9 @@ export function VistaTaccuino() {
           <div className={styles.vuoto}>
             <div className={styles.intestazioneAvventura} style={{ marginBottom: 8 }}>
               <input value={avventuraCorrente.titolo} onChange={(e) => rinominaAvventura(avventuraCorrente.id, e.target.value)} />
+              <button type="button" className={comuni.bottoneTesto} onClick={() => setAppuntiAperti(true)}>
+                Appunti avventura
+              </button>
               {avventuraCorrente.sessioni.length > 0 && (
                 <button type="button" className={comuni.bottoneTesto} onClick={esportaCronologia}>
                   Esporta cronologia (.md)
@@ -272,6 +277,9 @@ export function VistaTaccuino() {
           <div className={styles.schedaSessione}>
             <div className={styles.intestazioneAvventura}>
               <input value={avventuraCorrente.titolo} onChange={(e) => rinominaAvventura(avventuraCorrente.id, e.target.value)} />
+              <button type="button" className={comuni.bottoneTesto} onClick={() => setAppuntiAperti(true)}>
+                Appunti avventura
+              </button>
               <button type="button" className={comuni.bottoneTesto} onClick={esportaCronologia}>
                 Esporta cronologia (.md)
               </button>
@@ -411,6 +419,29 @@ export function VistaTaccuino() {
             setImmagineAperta(null);
           }}
         />
+      )}
+
+      {appuntiAperti && avventuraCorrente && (
+        <Dialogo titolo="Appunti e correzioni dell'avventura" onChiudi={() => setAppuntiAperti(false)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <p style={{ color: 'var(--colore-testo-attenuato)', margin: 0, fontSize: 14, lineHeight: 1.5 }}>
+              Fatti certi che vuoi far prevalere nel riassunto AI: nomi corretti, chi è davvero chi, chiarimenti su qualunque confusione. Hanno sempre la priorità sul
+              resto del contesto (racconto delle sessioni, riferimenti trovati automaticamente).
+            </p>
+            <textarea
+              className={comuni.input}
+              style={{ minHeight: 160, resize: 'vertical' }}
+              placeholder="Es. «Zadok Allen è il farmacista, non il barista — il barista si chiama Ezra.»"
+              value={avventuraCorrente.noteCorrezioni ?? ''}
+              onChange={(e) => aggiornaNoteCorrezioniAvventura(avventuraCorrente.id, e.target.value)}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button type="button" className={comuni.bottoneTesto} onClick={() => setAppuntiAperti(false)}>
+                Chiudi
+              </button>
+            </div>
+          </div>
+        </Dialogo>
       )}
     </div>
   );

@@ -237,6 +237,7 @@ interface StatoStore {
   // e immagini (§ "Taccuino delle avventure") ─────────────────────────────
   creaAvventura: (titolo: string) => string;
   rinominaAvventura: (id: string, titolo: string) => void;
+  aggiornaNoteCorrezioniAvventura: (id: string, testo: string) => void;
   eliminaAvventura: (id: string) => Promise<void>;
   creaSessione: (avventuraId: string, titolo: string) => string;
   aggiornaSessione: (avventuraId: string, sessioneId: string, patch: Partial<Pick<SessioneAvventura, 'titolo' | 'data' | 'luogo' | 'testo'>>) => void;
@@ -919,6 +920,13 @@ export const useInvestigatoreStore = create<StatoStore>((set, get) => {
       mutaAttivo((b) => {
         const a = b.avventure?.find((x) => x.id === id);
         if (a) a.titolo = titolo;
+      });
+    },
+
+    aggiornaNoteCorrezioniAvventura(id, testo) {
+      mutaAttivo((b) => {
+        const a = b.avventure?.find((x) => x.id === id);
+        if (a) a.noteCorrezioni = testo;
       });
     },
 

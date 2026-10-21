@@ -25,10 +25,17 @@ type PassoMigrazione = (dati: Record<string, unknown>) => Record<string, unknown
  * dato da trasformare, le schede più vecchie semplicemente non hanno ancora
  * nessuna avventura registrata.
  */
+/**
+ * 4 → 5: aggiunta degli appunti e correzioni curati a mano per ogni
+ * avventura (campo `noteCorrezioni`, facoltativo, come gli altri campi
+ * aggiunti finora). Nessun dato da trasformare: le avventure più vecchie
+ * semplicemente non hanno ancora appunti scritti.
+ */
 const MIGRAZIONI: Record<number, PassoMigrazione> = {
   1: (dati) => dati,
   2: (dati) => dati,
   3: (dati) => dati,
+  4: (dati) => dati,
 };
 
 export function applicaMigrazioni(dati: Record<string, unknown>, versioneIniziale: number): Record<string, unknown> {

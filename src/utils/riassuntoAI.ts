@@ -13,7 +13,8 @@ export class ErroreRiassuntoAI extends Error {}
 
 export const ETICHETTE_SEZIONI_RIASSUNTO = ['NARRAZIONE', 'INDIZI', 'PERSONAGGI', 'LUOGHI E OGGETTI', 'FILONI APERTI'] as const;
 
-const ISTRUZIONI_SISTEMA = `Aiuti chi gioca a un gioco di ruolo investigativo (ambientazione anni '20, stile Chiamata di Cthulhu) a tenere il diario della propria campagna. Ricevi il racconto scritto da chi gioca per l'ultima sessione e, se disponibili, due tipi di contesto dalle sessioni precedenti della stessa avventura:
+const ISTRUZIONI_SISTEMA = `Aiuti chi gioca a un gioco di ruolo investigativo (ambientazione anni '20, stile Chiamata di Cthulhu) a tenere il diario della propria campagna. Ricevi il racconto scritto da chi gioca per l'ultima sessione e, se disponibili, fino a tre tipi di contesto dalle sessioni precedenti della stessa avventura:
+- "Appunti e correzioni dell'investigatore (fonte autorevole)": scritti a mano da chi gioca apposta per correggere o chiarire fatti sull'avventura. Se qualunque altro materiale (racconto, riepilogo, riferimenti trovati automaticamente) sembra in conflitto con questi appunti, fidati sempre degli appunti.
 - un riepilogo delle sessioni più recenti, per continuità narrativa;
 - "Riferimenti trovati nella cronologia per nomi ricorrenti": estratti raccolti cercando, in tutte le sessioni passate (anche le più vecchie, non solo le recenti), gli stessi nomi propri che compaiono nel racconto di questa sessione. Sono trovati con un'euristica automatica, non da una lettura intelligente: alcuni potrebbero non essere nomi propri rilevanti (parole capitalizzate a caso). Usa il buon senso e ignora quelli che non sembrano un personaggio, un luogo o un oggetto vero.
 

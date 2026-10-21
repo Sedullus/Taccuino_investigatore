@@ -124,3 +124,33 @@ describe('cronologiaAvventura — riconoscimento nomi', () => {
     expect(contesto).toContain('Zadok Allen');
   });
 });
+
+describe('cronologiaAvventura — appunti e correzioni', () => {
+  it('costruisciContestoCompleto include gli appunti come materiale prioritario, prima del resto', () => {
+    const s1 = sessione({ id: 's1', creata: '2024-01-01T00:00:00.000Z', testo: 'Racconto qualunque.' });
+    const conAppunti: Avventura = { ...avventura([s1]), noteCorrezioni: 'Zadok Allen è il farmacista, non il barista.' };
+
+    const contesto = costruisciContestoCompleto(conAppunti, 's1');
+    expect(contesto).toContain('fonte autorevole');
+    expect(contesto).toContain('Zadok Allen è il farmacista, non il barista.');
+  });
+
+  it('costruisciContestoCompleto non aggiunge nulla se gli appunti sono assenti o vuoti', () => {
+    const s1 = sessione({ id: 's1', creata: '2024-01-01T00:00:00.000Z', testo: 'Racconto qualunque.' });
+    const senzaAppunti = costruisciContestoCompleto(avventura([s1]), 's1');
+    const appuntiVuoti = costruisciContestoCompleto({ ...avventura([s1]), noteCorrezioni: '   ' }, 's1');
+    expect(senzaAppunti).not.toContain('fonte autorevole');
+    expect(appuntiVuoti).not.toContain('fonte autorevole');
+  });
+
+  it('esportaCronologiaMd include gli appunti in cima, prima delle sessioni', () => {
+    const s1 = sessione({ id: 's1', creata: '2024-01-01T00:00:00.000Z', titolo: 'Arrivo', testo: 'Racconto.' });
+    const conAppunti: Avventura = { ...avventura([s1]), noteCorrezioni: 'Correzione importante.' };
+
+    const md = esportaCronologiaMd(conAppunti);
+    const posAppunti = md.indexOf('Correzione importante.');
+    const posSessione = md.indexOf('Arrivo');
+    expect(posAppunti).toBeGreaterThanOrEqual(0);
+    expect(posSessione).toBeGreaterThan(posAppunti);
+  });
+});
