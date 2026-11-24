@@ -140,6 +140,20 @@ function formattaNoteCorrezioni(avventura: Avventura): string {
 }
 
 /**
+ * Materiale per il riassunto finale dell'avventura: gli appunti (fonte
+ * autorevole) e tutte le sessioni per intero, in ordine cronologico. Qui
+ * non c'è il limite delle ultime N sessioni del riassunto di sessione: è una
+ * chiamata sola, fatta a fine avventura, e una lettura d'insieme ha senso
+ * solo se vede davvero tutto. Stringa vuota se non c'è nessuna sessione.
+ */
+export function costruisciMaterialeRiassuntoFinale(avventura: Avventura): string {
+  const ordinate = sessioniInOrdine(avventura);
+  if (ordinate.length === 0) return '';
+  const sessioni = `# Sessioni di "${avventura.titolo}", in ordine cronologico\n\n${ordinate.map((s) => voceSessione(s, true)).join('\n\n')}`;
+  return [formattaNoteCorrezioni(avventura), sessioni].filter(Boolean).join('\n\n');
+}
+
+/**
  * Contesto completo per il riassunto AI: gli appunti e correzioni curati a
  * mano (`formattaNoteCorrezioni`, se presenti, come materiale prioritario),
  * il riepilogo delle sessioni recenti (`costruisciContestoAvventura`), più

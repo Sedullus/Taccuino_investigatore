@@ -9,7 +9,7 @@
 
 import type { jsPDF } from 'jspdf';
 import type { Avventura, Investigatore, SessioneAvventura } from '../rules/types';
-import { analizzaRiassunto } from './riassuntoAI';
+import { analizzaRiassunto, ETICHETTE_SEZIONI_RIASSUNTO_FINALE } from './riassuntoAI';
 
 const MARGINE = 20;
 const COLORE_SFONDO: [number, number, number] = [239, 228, 200];
@@ -64,19 +64,16 @@ export function nomeFilePdf(sessione: SessioneAvventura): string {
   return `${pulito || 'sessione'}.pdf`;
 }
 
-export async function generaPdfSessione(
-  investigatore: Investigatore,
-  avventura: Avventura,
-  sessione: SessioneAvventura,
-  foto: FotoPdf[],
-  riassunto?: string,
-  notaRiassunto?: string,
-): Promise<jsPDF> {
+async function nuovoDocumento(): Promise<jsPDF> {
   const { jsPDF: Costruttore } = await import('jspdf');
   const doc = new Costruttore({ unit: 'mm', format: 'a4' });
-  const larghezzaPagina = doc.internal.pageSize.getWidth();
-  const larghezzaUtile = larghezzaPagina - MARGINE * 2;
   disegnaPaginaAntica(doc);
+  return doc;
+}
+
+/** Intestazione comune ai PDF del Taccuino; restituisce la y da cui proseguire. */
+function scriviIntestazione(doc: jsPDF, investigatore: Investigatore, titolo: string, sottotitolo: string, meta: string): number {
+  const larghezzaPagina = doc.internal.pageSize.getWidth();
   let y = MARGINE;
 
   doc.setTextColor(...COLORE_TESTO_ATTENUATO);
@@ -88,15 +85,14 @@ export async function generaPdfSessione(
   doc.setTextColor(...COLORE_TESTO);
   doc.setFont('times', 'bold');
   doc.setFontSize(20);
-  doc.text(avventura.titolo, MARGINE, y);
+  doc.text(titolo, MARGINE, y);
   y += 9;
 
   doc.setFont('times', 'normal');
   doc.setFontSize(15);
-  doc.text(sessione.titolo, MARGINE, y);
+  doc.text(sottotitolo, MARGINE, y);
   y += 7;
 
-  const meta = [sessione.data, sessione.luogo].filter(Boolean).join(' · ');
   if (meta) {
     doc.setTextColor(...COLORE_TESTO_ATTENUATO);
     doc.setFont('times', 'italic');
@@ -116,25 +112,31 @@ export async function generaPdfSessione(
   doc.setFont('times', 'normal');
   doc.setFontSize(10);
   doc.text(`Investigatore: ${investigatore.anagrafica.nome || 'senza nome'}`, MARGINE, y);
-  y += 10;
+  return y + 10;
+}
 
-  doc.setTextColor(...COLORE_TESTO);
-  doc.setFont('times', 'normal');
-  doc.setFontSize(12);
-  const testoRacconto = sessione.testo.trim() || '(nessun racconto scritto per questa sessione)';
-  y = scriviTestoConPaginazione(doc, testoRacconto, MARGINE, y, larghezzaUtile, 6.2);
+/**
+ * Riassunto AI diviso in sezioni, oppure — se manca — la nota che spiega
+ * perché: il PDF dichiara sempre, nero su carta invecchiata, se e perché
+ * manca il riassunto AI. Un messaggio in-app che sparisce dopo il download
+ * non basta, chi riapre il PDF più tardi deve poterlo capire comunque.
+ */
+function scriviRiassunto(doc: jsPDF, yIniziale: number, titolo: string, riassunto: string | undefined, nota: string | undefined, etichette?: readonly string[]): number {
+  const larghezzaUtile = doc.internal.pageSize.getWidth() - MARGINE * 2;
+  const altezzaPagina = doc.internal.pageSize.getHeight();
+  let y = yIniziale;
 
   if (riassunto) {
     y += 6;
-    if (y > doc.internal.pageSize.getHeight() - MARGINE - 20) y = nuovaPagina(doc);
+    if (y > altezzaPagina - MARGINE - 20) y = nuovaPagina(doc);
     doc.setFont('times', 'bold');
     doc.setFontSize(13);
     doc.setTextColor(...COLORE_BORDO);
-    doc.text('RIASSUNTO (generato dall’AI)', MARGINE, y);
+    doc.text(titolo, MARGINE, y);
     y += 8;
 
-    for (const sezione of analizzaRiassunto(riassunto)) {
-      if (y > doc.internal.pageSize.getHeight() - MARGINE - 14) y = nuovaPagina(doc);
+    for (const sezione of analizzaRiassunto(riassunto, etichette)) {
+      if (y > altezzaPagina - MARGINE - 14) y = nuovaPagina(doc);
       doc.setFont('times', 'bold');
       doc.setFontSize(11);
       doc.setTextColor(...COLORE_TESTO_ATTENUATO);
@@ -146,17 +148,38 @@ export async function generaPdfSessione(
       y = scriviTestoConPaginazione(doc, sezione.corpo || '—', MARGINE, y, larghezzaUtile, 5.6);
       y += 4;
     }
-  } else if (notaRiassunto) {
-    // Il PDF dichiara sempre, nero su carta invecchiata, se e perché manca il
-    // riassunto AI: un messaggio in-app che sparisce dopo il download non
-    // basta, chi riapre il PDF più tardi deve poterlo capire comunque.
+  } else if (nota) {
     y += 6;
-    if (y > doc.internal.pageSize.getHeight() - MARGINE - 16) y = nuovaPagina(doc);
+    if (y > altezzaPagina - MARGINE - 16) y = nuovaPagina(doc);
     doc.setFont('times', 'italic');
     doc.setFontSize(10);
     doc.setTextColor(...COLORE_TESTO_ATTENUATO);
-    scriviTestoConPaginazione(doc, notaRiassunto, MARGINE, y, larghezzaUtile, 5.2);
+    y = scriviTestoConPaginazione(doc, nota, MARGINE, y, larghezzaUtile, 5.2);
   }
+  return y;
+}
+
+export async function generaPdfSessione(
+  investigatore: Investigatore,
+  avventura: Avventura,
+  sessione: SessioneAvventura,
+  foto: FotoPdf[],
+  riassunto?: string,
+  notaRiassunto?: string,
+): Promise<jsPDF> {
+  const doc = await nuovoDocumento();
+  const larghezzaPagina = doc.internal.pageSize.getWidth();
+  const larghezzaUtile = larghezzaPagina - MARGINE * 2;
+  const meta = [sessione.data, sessione.luogo].filter(Boolean).join(' · ');
+  let y = scriviIntestazione(doc, investigatore, avventura.titolo, sessione.titolo, meta);
+
+  doc.setTextColor(...COLORE_TESTO);
+  doc.setFont('times', 'normal');
+  doc.setFontSize(12);
+  const testoRacconto = sessione.testo.trim() || '(nessun racconto scritto per questa sessione)';
+  y = scriviTestoConPaginazione(doc, testoRacconto, MARGINE, y, larghezzaUtile, 6.2);
+
+  scriviRiassunto(doc, y, 'RIASSUNTO (generato dall’AI)', riassunto, notaRiassunto);
 
   for (const f of foto) {
     const yFoto = nuovaPagina(doc);
@@ -182,5 +205,45 @@ export async function generaPdfSessione(
     }
   }
 
+  return doc;
+}
+
+export function nomeFilePdfRiassuntoFinale(avventura: Avventura): string {
+  const pulito = avventura.titolo.trim().replace(/[\\/:*?"<>|]+/g, '-');
+  return `${pulito || 'avventura'} - riassunto finale.pdf`;
+}
+
+/**
+ * Riassunto finale dell'avventura (§ "Riassunto finale"): l'elenco delle
+ * sessioni giocate, poi la lettura d'insieme generata dall'AI, divisa nelle
+ * sezioni di ETICHETTE_SEZIONI_RIASSUNTO_FINALE. Niente foto: restano nei
+ * PDF delle singole sessioni.
+ */
+export async function generaPdfRiassuntoFinale(
+  investigatore: Investigatore,
+  avventura: Avventura,
+  riassunto?: string,
+  notaRiassunto?: string,
+): Promise<jsPDF> {
+  const doc = await nuovoDocumento();
+  const larghezzaUtile = doc.internal.pageSize.getWidth() - MARGINE * 2;
+  const sessioni = [...avventura.sessioni].sort((a, b) => a.creata.localeCompare(b.creata));
+  const meta = sessioni.length === 1 ? '1 sessione' : `${sessioni.length} sessioni`;
+  let y = scriviIntestazione(doc, investigatore, avventura.titolo, 'Riassunto finale', meta);
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(...COLORE_TESTO_ATTENUATO);
+  doc.text('SESSIONI GIOCATE', MARGINE, y);
+  y += 5.5;
+  doc.setFont('times', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(...COLORE_TESTO);
+  for (const s of sessioni) {
+    const dettagli = [s.data, s.luogo].filter(Boolean).join(' · ');
+    y = scriviTestoConPaginazione(doc, `- ${s.titolo}${dettagli ? ` (${dettagli})` : ''}`, MARGINE, y, larghezzaUtile, 5.6);
+  }
+
+  scriviRiassunto(doc, y + 2, 'RIASSUNTO FINALE (generato dall’AI)', riassunto, notaRiassunto, ETICHETTE_SEZIONI_RIASSUNTO_FINALE);
   return doc;
 }

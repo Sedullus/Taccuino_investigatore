@@ -28,14 +28,7 @@ FILONI APERTI: elenco puntato di piste, domande o obiettivi ancora aperti per le
 
 Il riepilogo delle sessioni recenti e i riferimenti dalla cronologia servono solo a dare contesto: riassumi gli eventi solo di questa sessione, non ripetere quanto già successo prima, a meno che non serva per spiegare chi è un personaggio o cos'è un luogo/oggetto. Non aggiungere altro testo prima, dopo o tra le sezioni.`;
 
-export async function generaRiassunto(racconto: string, chiaveApi: string, contestoPrecedente?: string): Promise<string> {
-  const contenuto = [
-    contestoPrecedente ? `Contesto — sessioni precedenti della stessa avventura:\n\n${contestoPrecedente}` : null,
-    `Racconto della sessione da riassumere:\n\n${racconto}`,
-  ]
-    .filter((parte): parte is string => !!parte)
-    .join('\n\n---\n\n');
-
+async function chiamaAnthropic(sistema: string, contenuto: string, chiaveApi: string, maxToken: number): Promise<string> {
   const risposta = await fetch(URL_API, {
     method: 'POST',
     headers: {
@@ -46,8 +39,8 @@ export async function generaRiassunto(racconto: string, chiaveApi: string, conte
     },
     body: JSON.stringify({
       model: MODELLO,
-      max_tokens: MAX_TOKEN_RISPOSTA,
-      system: ISTRUZIONI_SISTEMA,
+      max_tokens: maxToken,
+      system: sistema,
       messages: [{ role: 'user', content: contenuto }],
     }),
   });
@@ -63,23 +56,56 @@ export async function generaRiassunto(racconto: string, chiaveApi: string, conte
   return blocco.text.trim();
 }
 
+export async function generaRiassunto(racconto: string, chiaveApi: string, contestoPrecedente?: string): Promise<string> {
+  const contenuto = [
+    contestoPrecedente ? `Contesto — sessioni precedenti della stessa avventura:\n\n${contestoPrecedente}` : null,
+    `Racconto della sessione da riassumere:\n\n${racconto}`,
+  ]
+    .filter((parte): parte is string => !!parte)
+    .join('\n\n---\n\n');
+  return chiamaAnthropic(ISTRUZIONI_SISTEMA, contenuto, chiaveApi, MAX_TOKEN_RISPOSTA);
+}
+
+// ── Riassunto finale dell'avventura (§ "Riassunto finale"): una lettura
+// d'insieme di tutte le sessioni, non la somma dei riassunti di sessione. ──
+
+const MAX_TOKEN_RIASSUNTO_FINALE = 2500;
+
+export const ETICHETTE_SEZIONI_RIASSUNTO_FINALE = ['TRAMA', 'PERSONAGGI', 'LUOGHI E OGGETTI', 'MISTERI SVELATI', 'QUESTIONI APERTE'] as const;
+
+const ISTRUZIONI_SISTEMA_FINALE = `Aiuti chi gioca a un gioco di ruolo investigativo (ambientazione anni '20, stile Chiamata di Cthulhu) a chiudere il diario di un'avventura. Ricevi il racconto di tutte le sessioni dell'avventura, in ordine cronologico, scritto da chi gioca, e — se presenti — i suoi "Appunti e correzioni (fonte autorevole)": fatti che ha scritto a mano apposta per correggere o chiarire. Se qualunque racconto sembra in conflitto con questi appunti, fidati sempre degli appunti.
+
+Scrivi il riassunto finale dell'intera avventura in italiano, fedele al materiale (non inventare nulla che non sia scritto o deducibile con certezza), come una lettura d'insieme e non come un elenco sessione per sessione. Organizzalo esattamente in queste cinque sezioni, in quest'ordine, ciascuna introdotta dalla sua etichetta seguita da due punti:
+
+TRAMA: il racconto dell'avventura dall'inizio alla fine, in due-quattro paragrafi di prosa: come è cominciata, come si è sviluppata, come si è conclusa (o dove si è interrotta).
+PERSONAGGI: elenco puntato (una riga per voce, che inizia con "- ") dei PNG che hanno contato nell'avventura, nel formato "- Nome: chi era, che ruolo ha avuto, come è finita per lui/lei". Scrivi "- Nessuno" se non ce ne sono.
+LUOGHI E OGGETTI: elenco puntato di luoghi e oggetti importanti per la trama, con il loro ruolo nell'avventura. Scrivi "- Nessuno" se non ce ne sono.
+MISTERI SVELATI: elenco puntato di cosa gli investigatori hanno scoperto o risolto. Scrivi "- Nessuno" se non ce ne sono.
+QUESTIONI APERTE: elenco puntato di domande rimaste senza risposta, minacce non sconfitte, fili da riprendere in un'avventura futura. Scrivi "- Nessuno" se non ce ne sono.
+
+Non aggiungere altro testo prima, dopo o tra le sezioni.`;
+
+export async function generaRiassuntoFinale(materiale: string, chiaveApi: string): Promise<string> {
+  return chiamaAnthropic(ISTRUZIONI_SISTEMA_FINALE, materiale, chiaveApi, MAX_TOKEN_RIASSUNTO_FINALE);
+}
+
 export interface SezioneRiassunto {
   titolo: string;
   corpo: string;
 }
 
 /**
- * Divide il riassunto nelle sezioni etichettate dal prompt (NARRAZIONE,
- * INDIZI, PERSONAGGI, FILONI APERTI). Se l'AI non ha seguito il formato
+ * Divide il riassunto nelle sezioni etichettate dal prompt (di default
+ * quelle del riassunto di sessione). Se l'AI non ha seguito il formato
  * richiesto (può succedere), ripiega su un'unica sezione "RIASSUNTO" con
  * tutto il testo: non deve mai sparire nulla, solo perdere la suddivisione.
  */
-export function analizzaRiassunto(testo: string): SezioneRiassunto[] {
+export function analizzaRiassunto(testo: string, etichette: readonly string[] = ETICHETTE_SEZIONI_RIASSUNTO): SezioneRiassunto[] {
   const sezioni: SezioneRiassunto[] = [];
   let corrente: SezioneRiassunto | null = null;
   for (const riga of testo.split('\n')) {
     const pulita = riga.trim();
-    const etichetta = ETICHETTE_SEZIONI_RIASSUNTO.find((e) => pulita.toUpperCase().startsWith(`${e}:`));
+    const etichetta = etichette.find((e) => pulita.toUpperCase().startsWith(`${e}:`));
     if (etichetta) {
       if (corrente) sezioni.push(corrente);
       corrente = { titolo: etichetta, corpo: pulita.slice(etichetta.length + 1).trim() };

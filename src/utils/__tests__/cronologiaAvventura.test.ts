@@ -4,6 +4,7 @@ import {
   cercaRiferimentiNomi,
   costruisciContestoAvventura,
   costruisciContestoCompleto,
+  costruisciMaterialeRiassuntoFinale,
   esportaCronologiaMd,
   estraiCandidatiNome,
   nomeFileCronologia,
@@ -152,5 +153,28 @@ describe('cronologiaAvventura — appunti e correzioni', () => {
     const posSessione = md.indexOf('Arrivo');
     expect(posAppunti).toBeGreaterThanOrEqual(0);
     expect(posSessione).toBeGreaterThan(posAppunti);
+  });
+});
+
+describe('cronologiaAvventura — materiale per il riassunto finale', () => {
+  it('include tutte le sessioni per intero, anche oltre il limite del riassunto di sessione, in ordine', () => {
+    const sessioni: SessioneAvventura[] = [];
+    for (let i = 1; i <= 8; i++) {
+      sessioni.push(sessione({ id: `s${i}`, creata: `2024-01-0${i}T00:00:00.000Z`, titolo: `Sessione ${i}`, testo: `Racconto numero ${i}.` }));
+    }
+    const materiale = costruisciMaterialeRiassuntoFinale(avventura([...sessioni].reverse()));
+    for (let i = 1; i <= 8; i++) expect(materiale).toContain(`Racconto numero ${i}.`);
+    expect(materiale.indexOf('Racconto numero 1.')).toBeLessThan(materiale.indexOf('Racconto numero 8.'));
+  });
+
+  it('antepone gli appunti come fonte autorevole', () => {
+    const s1 = sessione({ id: 's1', creata: '2024-01-01T00:00:00.000Z', titolo: 'Arrivo', testo: 'Racconto.' });
+    const materiale = costruisciMaterialeRiassuntoFinale({ ...avventura([s1]), noteCorrezioni: 'Il barista si chiama Ezra.' });
+    expect(materiale).toContain('fonte autorevole');
+    expect(materiale.indexOf('Il barista si chiama Ezra.')).toBeLessThan(materiale.indexOf('Arrivo'));
+  });
+
+  it('è vuoto se l\'avventura non ha sessioni', () => {
+    expect(costruisciMaterialeRiassuntoFinale(avventura([]))).toBe('');
   });
 });

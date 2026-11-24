@@ -127,3 +127,14 @@ Segnalato un riassunto AI con inesattezze (probabile confusione tra personaggi, 
 Questa è l'unica fonte di "verità aggiuntiva" sull'avventura che non sia il racconto scritto sessione per sessione — ma resta comunque scritta a mano dall'utente, mai generata dall'AI: coerente con la scelta, già presa per il contesto del riassunto, di non avere mai uno stato che l'AI aggiorna da sola (vedi "Contesto delle sessioni precedenti nel riassunto AI" più sopra).
 
 **Dove cambiarla:** `aggiornaNoteCorrezioniAvventura` in `src/store/investigatoreStore.ts`, il dialogo in `VistaTaccuino.tsx`, `formattaNoteCorrezioni` in `src/utils/cronologiaAvventura.ts`.
+
+### Riassunto finale dell'avventura: tutte le sessioni per intero, una lettura d'insieme
+
+Il pulsante **"Riassunto finale (PDF)"** (intestazione dell'avventura, visibile appena c'è almeno una sessione) genera un PDF con l'elenco delle sessioni giocate e un riassunto AI dell'intera avventura, in cinque sezioni pensate per chiuderla: TRAMA (prosa, dall'inizio alla fine), PERSONAGGI (chi era, che ruolo ha avuto, come è finita), LUOGHI E OGGETTI, MISTERI SVELATI, QUESTIONI APERTE (fili da riprendere in un'avventura futura).
+
+Tre scelte deliberate:
+1. **Tutte le sessioni per intero, senza il limite delle "ultime 5".** `costruisciMaterialeRiassuntoFinale` (`src/utils/cronologiaAvventura.ts`) non riusa il contesto del riassunto di sessione: quel limite serve a contenere il costo di una chiamata ripetuta a ogni sessione, mentre il riassunto finale è una chiamata sola a fine avventura, e una lettura d'insieme ha senso solo se vede davvero tutto. Per lo stesso motivo il limite di risposta è più alto (`MAX_TOKEN_RIASSUNTO_FINALE`, 2500 contro 900).
+2. **Dai racconti, non dai riassunti di sessione.** I riassunti di sessione non vengono mai salvati (vedi "Esporta PDF della sessione" più sopra); e anche se lo fossero, riassumere dei riassunti accumulerebbe gli errori di ognuno. Il materiale è sempre il testo scritto dall'utente, più gli "Appunti e correzioni" anteposti come fonte autorevole, esattamente come nel riassunto di sessione.
+3. **Stesso comportamento del PDF di sessione per tutto il resto:** rigenerato a ogni click (nessuna cache), nota nel PDF stesso se manca la chiave API o la chiamata fallisce, scheda aperta subito al click per non farsi bloccare come popup (la logica è ora condivisa in `generaEApriPdf`, `VistaTaccuino.tsx`). Niente foto: restano nei PDF delle singole sessioni.
+
+**Dove cambiarla:** `ISTRUZIONI_SISTEMA_FINALE`/`ETICHETTE_SEZIONI_RIASSUNTO_FINALE` in `src/utils/riassuntoAI.ts` (prompt e sezioni), `generaPdfRiassuntoFinale` in `src/utils/pdfSessione.ts` (impaginazione), `costruisciMaterialeRiassuntoFinale` in `src/utils/cronologiaAvventura.ts` (cosa riceve l'AI).
