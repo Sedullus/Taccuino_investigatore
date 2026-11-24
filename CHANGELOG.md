@@ -2,6 +2,13 @@
 
 Tutte le modifiche rilevanti del progetto, organizzate per fase di sviluppo.
 
+## Riassunto finale dell'avventura
+
+### Aggiunto
+- Nuovo pulsante **"Riassunto finale (PDF)"** sull'intestazione di ogni avventura: un PDF con l'elenco delle sessioni giocate e un riassunto AI dell'intera avventura — TRAMA, PERSONAGGI, LUOGHI E OGGETTI, MISTERI SVELATI, QUESTIONI APERTE. L'AI riceve tutte le sessioni per intero (non solo le ultime 5 come nel riassunto di sessione) e gli "Appunti avventura" come fonte autorevole.
+- Stesse garanzie del PDF di sessione: nota nel PDF se manca la chiave API o la chiamata fallisce, scheda aperta subito al click (logica anti-popup ora condivisa tra i due PDF).
+- 5 nuovi test automatici.
+
 ## Appunti e correzioni dell'avventura, con priorità nel riassunto AI
 
 ### Aggiunto

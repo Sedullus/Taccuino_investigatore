@@ -8,9 +8,14 @@ import { useInvestigatoreStore } from '../../store/investigatoreStore';
 import { leggiChiaveApiAnthropic, leggiImmagineTaccuino } from '../../persistence/archivio';
 import { ridimensionaImmagine } from '../../utils/immagine';
 import { useDettatura } from '../../hooks/useDettatura';
-import { generaPdfSessione, nomeFilePdf } from '../../utils/pdfSessione';
-import { generaRiassunto } from '../../utils/riassuntoAI';
-import { costruisciContestoCompleto, esportaCronologiaMd, nomeFileCronologia } from '../../utils/cronologiaAvventura';
+import { generaPdfRiassuntoFinale, generaPdfSessione, nomeFilePdf, nomeFilePdfRiassuntoFinale } from '../../utils/pdfSessione';
+import { generaRiassunto, generaRiassuntoFinale } from '../../utils/riassuntoAI';
+import {
+  costruisciContestoCompleto,
+  costruisciMaterialeRiassuntoFinale,
+  esportaCronologiaMd,
+  nomeFileCronologia,
+} from '../../utils/cronologiaAvventura';
 import { Dialogo } from '../comuni/Dialogo';
 import type { ImmagineNota } from '../../rules/types';
 import comuni from '../../theme/comuni.module.css';
@@ -95,16 +100,18 @@ export function VistaTaccuino() {
     await aggiungiImmagineSessione(avventuraCorrente.id, sessioneCorrente.id, dataUrl);
   }
 
-  async function esportaPdf() {
-    if (!attivo || !avventuraCorrente || !sessioneCorrente) return;
+  /**
+   * Apre subito una scheda vuota, nello stesso istante del click: se
+   * window.open() arriva solo dopo aver atteso la chiamata al riassunto AI
+   * (anche solo un paio di secondi), molti browser non la collegano più al
+   * click originale e la bloccano in silenzio come popup. Quando `costruisci`
+   * ha prodotto il PDF, la stessa scheda viene navigata verso di esso, e il
+   * file viene anche scaricato. Va chiamata in modo sincrono dal click.
+   */
+  async function generaEApriPdf(costruisci: () => Promise<{ blob: Blob; nomeFile: string }>) {
     setErroreRiassunto(null);
     setErrorePdf(null);
     setGenerandoPdf(true);
-    // Apre subito una scheda vuota, nello stesso istante del click: se
-    // window.open() arriva solo dopo aver atteso la chiamata al riassunto
-    // AI (anche solo un paio di secondi), molti browser non la collegano
-    // più al click originale e la bloccano in silenzio come popup. Qui
-    // navighiamo questa stessa scheda quando il PDF è pronto.
     const finestra = window.open('', '_blank');
     if (finestra) {
       finestra.document.title = "Taccuino dell'Investigatore";
@@ -112,6 +119,34 @@ export function VistaTaccuino() {
       finestra.document.body.textContent = 'Generazione del PDF in corso…';
     }
     try {
+      const { blob, nomeFile } = await costruisci();
+      const url = URL.createObjectURL(blob);
+      if (finestra && !finestra.closed) {
+        finestra.location.href = url;
+      } else {
+        window.open(url, '_blank');
+      }
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nomeFile;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      const messaggio = err instanceof Error ? err.message : 'Errore sconosciuto durante la generazione del PDF.';
+      setErrorePdf(messaggio);
+      if (finestra && !finestra.closed) {
+        finestra.document.body.textContent = `Generazione del PDF non riuscita: ${messaggio}`;
+      }
+    } finally {
+      setGenerandoPdf(false);
+    }
+  }
+
+  function esportaPdf() {
+    if (!attivo || !avventuraCorrente || !sessioneCorrente) return;
+    void generaEApriPdf(async () => {
       const foto = await Promise.all(
         sessioneCorrente.immagini.map(async (img) => ({
           dataUrl: (await leggiImmagineTaccuino(img.chiave)) ?? '',
@@ -137,29 +172,32 @@ export function VistaTaccuino() {
       }
 
       const doc = await generaPdfSessione(attivo, avventuraCorrente, sessioneCorrente, fotoValide, riassunto, notaRiassunto);
-      const blob = doc.output('blob');
-      const url = URL.createObjectURL(blob);
-      if (finestra && !finestra.closed) {
-        finestra.location.href = url;
+      return { blob: doc.output('blob'), nomeFile: nomeFilePdf(sessioneCorrente) };
+    });
+  }
+
+  function esportaRiassuntoFinale() {
+    if (!attivo || !avventuraCorrente) return;
+    void generaEApriPdf(async () => {
+      let riassunto: string | undefined;
+      let notaRiassunto: string | undefined;
+      const chiaveApi = await leggiChiaveApiAnthropic();
+      if (!chiaveApi) {
+        notaRiassunto = 'Riassunto finale non incluso: nessuna chiave API Anthropic salvata nelle Impostazioni.';
+      } else if (!avventuraCorrente.sessioni.some((s) => s.testo.trim())) {
+        notaRiassunto = 'Riassunto finale non incluso: nessuna sessione di questa avventura ha ancora un racconto scritto.';
       } else {
-        window.open(url, '_blank');
+        try {
+          riassunto = await generaRiassuntoFinale(costruisciMaterialeRiassuntoFinale(avventuraCorrente), chiaveApi);
+        } catch (err) {
+          const messaggio = err instanceof Error ? err.message : 'Riassunto AI non disponibile.';
+          setErroreRiassunto(messaggio);
+          notaRiassunto = `Riassunto finale non riuscito: ${messaggio}`;
+        }
       }
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = nomeFilePdf(sessioneCorrente);
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch (err) {
-      const messaggio = err instanceof Error ? err.message : 'Errore sconosciuto durante la generazione del PDF.';
-      setErrorePdf(messaggio);
-      if (finestra && !finestra.closed) {
-        finestra.document.body.textContent = `Generazione del PDF non riuscita: ${messaggio}`;
-      }
-    } finally {
-      setGenerandoPdf(false);
-    }
+      const doc = await generaPdfRiassuntoFinale(attivo, avventuraCorrente, riassunto, notaRiassunto);
+      return { blob: doc.output('blob'), nomeFile: nomeFilePdfRiassuntoFinale(avventuraCorrente) };
+    });
   }
 
   function esportaCronologia() {
@@ -264,11 +302,18 @@ export function VistaTaccuino() {
                 Appunti avventura
               </button>
               {avventuraCorrente.sessioni.length > 0 && (
-                <button type="button" className={comuni.bottoneTesto} onClick={esportaCronologia}>
-                  Esporta cronologia (.md)
-                </button>
+                <>
+                  <button type="button" className={comuni.bottoneTesto} onClick={esportaCronologia}>
+                    Esporta cronologia (.md)
+                  </button>
+                  <button type="button" className={comuni.bottoneTesto} disabled={generandoPdf} onClick={esportaRiassuntoFinale}>
+                    {generandoPdf ? 'Genero il PDF…' : 'Riassunto finale (PDF)'}
+                  </button>
+                </>
               )}
             </div>
+            {erroreRiassunto && <p className={styles.suggerimentoDettatura}>Il riassunto AI non è disponibile ({erroreRiassunto}): il PDF è stato generato senza.</p>}
+            {errorePdf && <p className={styles.suggerimentoDettatura}>Generazione del PDF non riuscita: {errorePdf}</p>}
             <div className={styles.vuotoTesto}>Scegli una sessione qui a fianco, o creane una nuova per iniziare a scrivere.</div>
           </div>
         )}
@@ -283,8 +328,11 @@ export function VistaTaccuino() {
               <button type="button" className={comuni.bottoneTesto} onClick={esportaCronologia}>
                 Esporta cronologia (.md)
               </button>
-              <button type="button" className={comuni.bottoneTesto} disabled={generandoPdf} onClick={() => void esportaPdf()}>
+              <button type="button" className={comuni.bottoneTesto} disabled={generandoPdf} onClick={esportaPdf}>
                 {generandoPdf ? 'Genero il PDF…' : 'Esporta PDF'}
+              </button>
+              <button type="button" className={comuni.bottoneTesto} disabled={generandoPdf} onClick={esportaRiassuntoFinale}>
+                Riassunto finale (PDF)
               </button>
               <button type="button" className={comuni.bottoneTestoPericolo} onClick={() => setSessioneDaEliminare(sessioneCorrente.id)}>
                 Elimina sessione

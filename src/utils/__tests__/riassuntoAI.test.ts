@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { analizzaRiassunto } from '../riassuntoAI';
+import { analizzaRiassunto, ETICHETTE_SEZIONI_RIASSUNTO_FINALE } from '../riassuntoAI';
 
 describe('riassuntoAI — analizzaRiassunto', () => {
   it('divide il testo nelle quattro sezioni etichettate', () => {
@@ -33,5 +33,30 @@ describe('riassuntoAI — analizzaRiassunto', () => {
   it('accetta etichette senza distinguere maiuscole/minuscole', () => {
     const sezioni = analizzaRiassunto('Narrazione: Prova.\nIndizi:\n- Nessuno');
     expect(sezioni.map((s) => s.titolo)).toEqual(['NARRAZIONE', 'INDIZI']);
+  });
+});
+
+describe('riassuntoAI — analizzaRiassunto con le etichette del riassunto finale', () => {
+  it('riconosce le sezioni del riassunto finale', () => {
+    const testo = [
+      'TRAMA: Gli investigatori arrivano a Innsmouth.',
+      'Scoprono il culto e fuggono.',
+      'PERSONAGGI:',
+      '- Zadok Allen: farmacista, li aiuta.',
+      'LUOGHI E OGGETTI:',
+      '- Il faro: covo del culto.',
+      'MISTERI SVELATI:',
+      '- Il culto esiste.',
+      'QUESTIONI APERTE:',
+      '- Che fine ha fatto Zadok?',
+    ].join('\n');
+    const sezioni = analizzaRiassunto(testo, ETICHETTE_SEZIONI_RIASSUNTO_FINALE);
+    expect(sezioni.map((s) => s.titolo)).toEqual(['TRAMA', 'PERSONAGGI', 'LUOGHI E OGGETTI', 'MISTERI SVELATI', 'QUESTIONI APERTE']);
+    expect(sezioni[0].corpo).toContain('fuggono');
+  });
+
+  it('non confonde le etichette del riassunto di sessione con quelle del finale', () => {
+    const sezioni = analizzaRiassunto('NARRAZIONE: testo di sessione.', ETICHETTE_SEZIONI_RIASSUNTO_FINALE);
+    expect(sezioni).toEqual([{ titolo: 'RIASSUNTO', corpo: 'NARRAZIONE: testo di sessione.' }]);
   });
 });
